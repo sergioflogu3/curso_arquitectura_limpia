@@ -45,7 +45,7 @@ public class AccountController {
 
     @GetMapping("/{id}/transactions")
     public ResponseEntity<List<Transaction>> getTransactions(@PathVariable Long id){
-        return ResponseEntity.ok(transferService.getTransactions(id));
+        return ResponseEntity.ok(transactionQueryService.getByAccountId(id));
     }
 
 }
