@@ -1,4 +1,4 @@
-package com.atlas.bank.atlas_bank.service;
+package com.atlas.bank.atlas_bank.account.service;
 
 import com.atlas.bank.atlas_bank.account.model.Account;
 

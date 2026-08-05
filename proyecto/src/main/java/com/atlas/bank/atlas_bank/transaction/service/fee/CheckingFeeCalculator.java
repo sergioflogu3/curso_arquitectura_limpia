@@ -1,4 +1,4 @@
-package com.atlas.bank.atlas_bank.service.fee;
+package com.atlas.bank.atlas_bank.transaction.service.fee;
 
 import org.springframework.stereotype.Component;
 
