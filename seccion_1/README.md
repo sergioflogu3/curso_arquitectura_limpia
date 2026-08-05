@@ -1,650 +1,480 @@
-# Presentación 1 — "Los cimientos: Por qué la arquitectura importa"
-**Curso:** Patrones de arquitectura con Spring Boot 4 y Java 21
-**Proyecto guía:** atlas-bank (basado en la colección Postman provista)
-**Formato:** módulo de 13 clases (~45 min promedio c/u, total ≈ 7.5-8 horas repartidas en varias sesiones)
-**Audiencia:** compañeros de trabajo — nivel asumido: conocen Java, no necesariamente Spring ni arquitectura de software
+# Sección 1: Los cimientos — Por qué la arquitectura importa
 
----
+Guía de referencia para el equipo. Resume el contenido de las 13 clases de la sección, con el código real del proyecto **atlas-bank**, las capturas de pantalla y los slides de cada clase. Sirve como material de consulta para quien no vio la clase en vivo o quiera repasar un concepto puntual.
 
-## ⚠️ Notas de alcance (léelas antes de armar los slides)
+## Qué vas a encontrar
 
-1. **La colección Postman describe el estado final del proyecto, no el de esta presentación.** Incluye Auth con Keycloak, Transactions y un AI Agent. Esta Sección 1 **solo** cubre: CRUD de `Account`, SOLID, inyección de dependencias, y organización de paquetes. Dilo explícitamente en la Clase 1 para fijar expectativas.
-2. **`GET /accounts/{id}/dashboard` queda fuera del checkpoint** salvo que lo implementes como stub con datos fijos — depende de `Transactions`, que no existe todavía en este alcance.
-3. **Modelo de datos real** (extraído de los request bodies de Postman), es la base de todos los ejemplos de código de este plan:
-   ```
-   Account {
-     accountNumber: String   // "10001"
-     ownerName: String       // "Juan Pérez"
-     email: String           // "juan@example.com"
-     type: AccountType       // SAVINGS | CHECKING
-     balance: BigDecimal     // 50000.00
-     status: AccountStatus   // ACTIVE | CLOSED (inferido del endpoint /close)
-   }
-   ```
-4. **Stack confirmado:** Spring Boot 4.1.x requiere Java 17 como mínimo, pero recomienda fuertemente Java 21+ para virtual threads — tu elección de Java 21 es la correcta y vale la pena mencionarlo como gancho en la Clase 1 (no es una elección arbitraria, es la recomendación oficial actual).
+- Principios **SOLID** aplicados con criterio (no como dogma)
+- Inyección de dependencias: constructor injection, `@Qualifier`, `@Primary`
+- Evolución real de un CRUD sin arquitectura hacia un proyecto organizado
+- Package-by-layer vs package-by-feature
+- El proyecto **atlas-bank**: cuentas, transferencias, comisiones
 
----
-
-## Estructura general (13 slides de sección + subslides por clase)
-
-| # | Clase | Duración | Bloque temático |
-|---|-------|----------|------------------|
-| 1 | Los objetivos: aprendizaje y proyecto | 15 min | Kickoff |
-| 2 | El costo del código sin arquitectura | 30 min | Motivación |
-| 3 | Setup del proyecto base (parte 1 y 2) | 60 min | Setup |
-| 4 | Conectando las capas del proyecto (parte 1 y 2) | 60 min | CRUD base |
-| 5 | Principios SOLID (overview) | 20 min | SOLID |
-| 6 | Single Responsibility | 30 min | SOLID |
-| 7 | Open/Closed | 30 min | SOLID |
-| 8 | Liskov Substitution | 30 min | SOLID |
-| 9 | Interface Segregation | 25 min | SOLID |
-| 10 | Dependency Inversion | 35 min | SOLID |
-| 11 | Inyección de dependencias en Spring | 35 min | DI |
-| 12 | Package-by-layer vs package-by-feature | 40 min | Organización |
-| 13 | Checkpoint del proyecto | 60 min | Cierre |
+El proyecto vive en [`/proyecto`](../proyecto) y evoluciona clase a clase. Cada clase de esta carpeta (`clase_1` … `clase_13`) contiene el slide (`.html`), capturas de pantalla y/o fragmentos de código de ese momento del curso.
 
 ---
 
 ## Clase 1 — Los objetivos: aprendizaje y proyecto
-**Duración:** 15 min
-**Objetivo:** que el equipo sepa qué va a poder hacer al terminar la Sección 1 y qué NO se va a cubrir todavía.
 
-**Contenido:**
-- Qué es `atlas-bank` y por qué es el hilo conductor de todo el curso (mostrar el diagrama de arquitectura hexagonal final como "spoiler" del destino, sin implementarlo aún).
-- Alcance explícito de esta presentación: CRUD de cuentas, SOLID, DI, organización de paquetes.
-- Alcance explícito de lo que **no** se toca todavía: transferencias, seguridad con Keycloak, agente de IA (eso son presentaciones futuras).
-- Cómo se evalúa el checkpoint de la Clase 13.
+Slide: [`clase_1/slides-clase-02.html`](clase_1/slides-clase-02.html)
 
-**Demo/código:** ninguno — es slide de contexto.
+Introducción al curso completo (no solo a esta sección):
 
-**Actividad:** pregunta abierta al equipo: "¿qué proyecto suyo actual no sobreviviría un cambio de requerimientos sin reescritura total?" (dispara la Clase 2).
+- Principios SOLID aplicados con criterio
+- 11 patrones de diseño implementados
+- Domain-Driven Design táctico
+- Arquitectura Hexagonal completa
+- CQRS liviano
+- Testing arquitectónico con ArchUnit
+- AI Agent como cliente de la arquitectura
 
-**Slides sugeridos:**
-1. Portada: Patrones de arquitectura con Spring Boot 4 + Java 21
-2. Qué es atlas-bank (mapa mental del proyecto completo, con las 3 fases marcadas: Fundamentos → Hexagonal → Seguridad/IA)
-3. Qué cubrimos en esta presentación (checklist)
-4. Qué NO cubrimos todavía (checklist, para evitar falsas expectativas)
-5. Cómo se evalúa el checkpoint
+Proyecto guía: **atlas-bank**, un sistema bancario simplificado (cuentas, transferencias, comisiones, seguridad con Keycloak). Cada patrón se justifica con un caso real y el proyecto evoluciona clase a clase — no se reescribe de cero.
+
+Requisitos: Spring Boot a nivel CRUD (controllers, JPA, REST) y Java básico/intermedio. No hace falta saber arquitectura, DDD ni patrones de antemano.
+
+> "Tu código no solo tiene que funcionar — tiene que poder crecer, cambiar y sobrevivir."
 
 ---
 
 ## Clase 2 — El costo del código sin arquitectura
-**Duración:** 30 min
-**Objetivo:** que el equipo sienta el dolor del código sin criterio arquitectónico antes de darles la solución.
 
-**Contenido:**
-- Síntomas típicos: clases de 800 líneas, lógica de negocio en el controller, imposibilidad de testear sin levantar toda la app, miedo a tocar código porque "algo se rompe en otro lado".
-- Costo real: tiempo de onboarding, tiempo de estimación que se dispara, bugs en producción por acoplamiento oculto.
-- Contraste: mostrar una versión "mala" de `AccountController` que hace validación, persistencia (con `EntityManager` directo), envío de email y logging, todo en el mismo método `crearCuenta()`.
+Slide: [`clase_2/slides-clase-03.html`](clase_2/slides-clase-03.html)
 
-**Demo/código:**
-```java
-// Versión ANTI-PATRÓN — todo en el controller
-@RestController
-@RequestMapping("/api/v1/accounts")
-public class AccountController {
+> "Todos los proyectos arrancan bien. El problema es cuando crecen."
 
-    @PersistenceContext
-    private EntityManager em;
+El proyecto típico de Spring Boot sin criterio:
 
-    @PostMapping
-    public ResponseEntity<?> crearCuenta(@RequestBody Map<String, Object> body) {
-        if (body.get("email") == null || !body.get("email").toString().contains("@")) {
-            return ResponseEntity.badRequest().body("email inválido");
-        }
-        // persistencia manual mezclada con validación y lógica de negocio
-        Account a = new Account();
-        a.setAccountNumber((String) body.get("accountNumber"));
-        a.setOwnerName((String) body.get("ownerName"));
-        a.setEmail((String) body.get("email"));
-        a.setBalance(new BigDecimal(body.get("balance").toString()));
-        em.persist(a);
-        // envío de email hardcodeado aquí mismo...
-        // logging manual aquí mismo...
-        return ResponseEntity.ok(a);
-    }
-}
-```
-Este es el "villano" que la Sección 1 entera va a ir desmontando pieza por pieza.
+- Controller → Service → Repository, y el Service **hace todo**
+- La Entity sale directo al controller (sin DTO)
+- Sin manejo de errores estructurado (`RuntimeException` para todo)
+- Sin validación centralizada
+- "Funciona" hasta que crece — ese es el "God Service"
 
-**Actividad:** el equipo identifica en voz alta 3 responsabilidades mezcladas en ese método.
+Lo que se va a construir a lo largo del curso para resolverlo:
 
-**Slides sugeridos:**
-1. Los síntomas del código sin arquitectura
-2. El costo real (tiempo, bugs, miedo a tocar código)
-3. Code smell en vivo: AccountController "todo en uno"
-4. ¿Cuántas responsabilidades encontraron?
+| Problema | Solución |
+|---|---|
+| God Service | Services cohesivos con SRP |
+| Entity expuesta | DTOs + mapeo |
+| `RuntimeException` genérica | `ProblemDetail` + RFC 7807 |
+| Comisión hardcodeada | Strategy Pattern |
+| Todo acoplado | Arquitectura Hexagonal |
+| Sin tests de estructura | ArchUnit |
 
 ---
 
 ## Clase 3 — Setup del proyecto base (parte 1 y 2)
-**Duración:** 60 min (30 + 30)
 
-### Parte 1 — Spring Initializr
-**Objetivo:** dejar el esqueleto de `atlas-bank` corriendo.
-**Contenido:**
-- start.spring.io: Spring Boot 4.1.x, Java 21, Maven/Gradle (definir cuál usa el equipo).
-- Dependencias mínimas: Spring Web, Spring Data JPA, Validation, H2 (dev) / PostgreSQL (driver).
-- Estructura de carpetas inicial generada por Initializr.
-- `application.yml` básico (puerto, datasource H2 en memoria).
+Setup de **atlas-bank** con Spring Initializr, dependencias (Web, JPA, H2, Lombok) y verificación de la consola H2.
 
-**Demo/código:**
-```yaml
-spring:
-  application:
-    name: atlas-bank
-  datasource:
-    url: jdbc:h2:mem:atlas-bank
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
-  jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
-    hibernate:
-      ddl-auto: create-drop
-    show-sql: true
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-server:
-  port: 8080
-```
+| Spring Initializr | Arranque H2 | Consola H2 |
+|---|---|---|
+| ![Spring Initializr](clase_3/01-Spring-Inittializr.png) | ![H2 inicio](clase_3/02-H2-Inicio.png) | ![Consola H2](clase_3/03-H2.png) |
 
-### Parte 2 — Entidad Account
-**Objetivo:** modelar la entidad base a partir del contrato ya definido en Postman.
-**Contenido:**
-- Mapear `Account` como entidad JPA usando exactamente los campos que ya usan los compañeros en Postman (`accountNumber`, `ownerName`, `email`, `type`, `balance`).
-- Enum `AccountType { SAVINGS, CHECKING }`.
-- Por qué arrancar del contrato de API (lo que YA consumen) reduce fricción con el equipo que prueba en Postman.
-
-**Demo/código:**
-```java
-package com.atlas.bank.atlas_bank.model;
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-
-@Entity
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class Account {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    private String accountNumber;
-    private String ownerName;
-    private String email;
-    private String type;  // SAVING, CHECKING,
-    private BigDecimal balance;
-    private String status; // ACTIVE, CLOSED, FROZEN
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = LocalDateTime.now();
-        if (status == null) this.status = "ACTIVE";
-        if (balance == null) this.balance = BigDecimal.ZERO;
-    }
-}
-```
-
-
-
-**Actividad:** cada compañero levanta el proyecto localmente y confirma que `GET /actuator/health` (o un endpoint dummy) responde antes de seguir.
-
-**Slides sugeridos:**
-1. Spring Initializr en vivo (screenshot o demo real)
-2. Dependencias elegidas y por qué
-3. application.yml explicado línea por línea
-4. La entidad Account, campo por campo, contra el JSON real de Postman
-5. Checkpoint intermedio: "¿a todos les levantó el proyecto?"
+Proyecto base descargado: [`clase_3/atlas-bank.zip`](clase_3/atlas-bank.zip)
 
 ---
 
 ## Clase 4 — Conectando las capas del proyecto (parte 1 y 2)
-**Duración:** 60 min (30 + 30)
 
-### Parte 1 — Repository y Service
-**Objetivo:** implementar el flujo completo Controller → Service → Repository para `POST /accounts` y `GET /accounts`.
-**Contenido:**
-- `AccountRepository extends JpaRepository<Account, Long>`.
-- `AccountService` con lógica mínima (todavía sin SOLID perfecto — a propósito, para refactorizarlo en las clases 6-10).
-- Por qué el Controller nunca debe hablar directo con el Repository.
+Primer CRUD funcional, todo en un único paquete plano (`com.atlas.bank`), sin separación por capas ni por feature. Es el punto de partida "sin arquitectura" que se referencia en toda la sección.
 
-**Demo/código:**
+**`AccountService`** — un único service hace de todo: alta de cuentas, consulta, y la lógica completa de transferencia (búsqueda de cuentas, validación de estado, validación de fondos, cálculo de comisión hardcodeado con `if/else`, actualización de saldos y registro de la transacción):
+
 ```java
-public interface AccountRepository extends JpaRepository<Account, Long> {
-    Optional<Account> findByAccountNumber(String accountNumber);
-}
-
+// clase_4/AccountService.java
 @Service
+@RequiredArgsConstructor
 public class AccountService {
 
-    private final AccountRepository repository;
+    private final AccountRepository accountRepository;
+    private final TransactionRepository transactionRepository;
 
-    public AccountService(AccountRepository repository) {
-        this.repository = repository;
+    public Account create(Account account) { return accountRepository.save(account); }
+    public List<Account> findAll() { return accountRepository.findAll(); }
+    public Account findById(Long id) {
+        return accountRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Cuenta no encontrada"));
     }
 
-    public Account crear(Account account) {
-        return repository.save(account);
+    @Transactional
+    public Transaction transfer(Long fromId, Long toId, BigDecimal amount) {
+        Account from = accountRepository.findById(fromId)
+                .orElseThrow(() -> new RuntimeException("Cuenta origen no encontrada"));
+        Account to = accountRepository.findById(toId)
+                .orElseThrow(() -> new RuntimeException("Cuenta destino no encontrada"));
+
+        if (!"ACTIVE".equals(from.getStatus())) throw new RuntimeException("La cuenta origen no está activa");
+        if (!"ACTIVE".equals(to.getStatus())) throw new RuntimeException("La cuenta destino no está activa");
+        if (from.getBalance().compareTo(amount) < 0) throw new RuntimeException("Fondos insuficientes");
+
+        // Calcular comisión — hardcodeada
+        BigDecimal fee;
+        if ("SAVINGS".equals(from.getType())) {
+            fee = amount.multiply(new BigDecimal("0.01"));
+        } else if ("CHECKING".equals(from.getType())) {
+            fee = amount.multiply(new BigDecimal("0.015"));
+        } else {
+            fee = BigDecimal.ZERO;
+        }
+
+        from.setBalance(from.getBalance().subtract(amount).subtract(fee));
+        to.setBalance(to.getBalance().add(amount));
+        accountRepository.save(from);
+        accountRepository.save(to);
+
+        Transaction transaction = new Transaction();
+        transaction.setType("TRANSFER");
+        transaction.setSourceAccountId(fromId);
+        transaction.setTargetAccountId(toId);
+        transaction.setAmount(amount);
+        transaction.setFee(fee);
+        transaction.setStatus("EXECUTED");
+
+        return transactionRepository.save(transaction);
     }
 
-    public List<Account> listarTodas() {
-        return repository.findAll();
+    public List<Transaction> getTransactions(Long accountId) {
+        return transactionRepository.findBySourceAccountIdOrTargetAccountId(accountId, accountId);
     }
 }
 ```
 
-### Parte 2 — Controller y contrato REST
-**Objetivo:** exponer los endpoints que YA existen en la colección Postman, para que el equipo pruebe en vivo contra sus propios requests guardados.
-**Contenido:**
-- `POST /api/v1/accounts`, `GET /api/v1/accounts`, `GET /api/v1/accounts/{id}` — implementados uno a uno contra la colección real.
-- DTOs de entrada/salida vs exponer la entidad JPA directamente (mencionar el riesgo, profundizar en presentaciones futuras).
+Este es exactamente el "God Service" que la Clase 2 describe como problema y que las clases 6, 7 y 10 van a desarmar.
 
-**Demo/código:**
-```java
-@RestController
-@RequestMapping("/api/v1/accounts")
-public class AccountController {
+Flujo probado manualmente contra la API:
 
-    private final AccountService service;
+| Crear cuenta | Crear cuenta 2 | Ver cuentas |
+|---|---|---|
+| ![Crear cuenta 1](clase_4/01-CrearCuenta_1.png) | ![Crear cuenta 2](clase_4/02-CrearCuenta_2.png) | ![Ver cuentas](clase_4/03-VerCuentas.png) |
 
-    public AccountController(AccountService service) {
-        this.service = service;
-    }
+| Transferencia | Ver cuenta origen | Ver cuenta destino |
+|---|---|---|
+| ![Transferencia](clase_4/04-Transferencia.png) | ![Ver cuenta 1](clase_4/05-VerCuenta1.png) | ![Ver cuenta 2](clase_4/06-VerCuenta2.png) |
 
-    @PostMapping
-    public ResponseEntity<Account> crear(@RequestBody Account account) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.crear(account));
-    }
+| Error de transferencia (fondos insuficientes / cuenta inactiva) | Traza del error en consola |
+|---|---|
+| ![Error transferencia](clase_4/07-ErrorTransfer.png) | ![Error en consola](clase_4/08-ErrorConsola.png) |
 
-    @GetMapping
-    public List<Account> listar() {
-        return service.listarTodas();
-    }
-}
-```
-
-**Actividad:** el equipo corre "Create Account" y "List All Accounts" desde su propia colección Postman contra el proyecto recién levantado — cierre del loop input→output.
-
-**Slides sugeridos:**
-1. El flujo Controller → Service → Repository (diagrama)
-2. AccountRepository en vivo
-3. AccountService en vivo (versión inicial, "buena pero mejorable")
-4. AccountController en vivo
-5. Demo cruzada: Postman real del equipo contra el código recién escrito
+El error de la última captura es justamente el `RuntimeException` genérico que la Clase 2 marca como falta de manejo de errores estructurado — se resuelve más adelante en la Sección 2 con `ProblemDetail`.
 
 ---
 
-## Clase 5 — Principios SOLID (overview)
-**Duración:** 20 min
-**Objetivo:** dar el mapa completo antes de entrar principio por principio.
+## Clase 5 — Principios SOLID
 
-**Contenido:**
-- Qué significa cada letra, en una frase, sin ejemplos todavía.
-- Por qué SOLID no es una lista de reglas sino una forma de razonar sobre el cambio.
-- Anticipar: cada uno de los 5 principios siguientes se va a mostrar violado y luego corregido sobre `AccountService`.
+Slide: [`clase_5/slides-clase-06.html`](clase_5/slides-clase-06.html)
 
-**Demo/código:** ninguno — es slide de mapa conceptual.
+> "SOLID no te dice qué construir. Te dice cómo construirlo para que no se caiga."
 
-**Actividad:** ninguna, es puente hacia la Clase 6.
+- **S** — Single Responsibility
+- **O** — Open/Closed
+- **L** — Liskov Substitution
+- **I** — Interface Segregation
+- **D** — Dependency Inversion
 
-**Slides sugeridos:**
-1. SOLID: las 5 letras, una frase cada una
-2. El hilo conductor: todas las violaciones van a vivir en AccountService
-3. Roadmap de las próximas 5 clases
+No son teoría: cada principio resuelve un problema concreto que ya está presente en el `AccountService` de la Clase 4.
+
+| Principio | Problema en atlas-bank | Solución |
+|---|---|---|
+| S — SRP | `AccountService` hace 5 cosas | Partir en servicios cohesivos |
+| O — OCP | `if/else` para comisiones | Strategy que se extiende sin modificar |
+| L — LSP | Herencia que rompe contratos | Subtipos que respetan el contrato |
+| I — ISP | Interfaces gordas | Contratos específicos por cliente |
+| D — DIP | Service conoce la implementación | Depender de abstracciones |
 
 ---
 
 ## Clase 6 — Single Responsibility: el servicio que hace todo
-**Duración:** 30 min
-**Objetivo:** identificar y separar responsabilidades mezcladas en `AccountService`.
 
-**Contenido:**
-- Ampliar `AccountService` con validación + notificación + auditoría, todo mezclado (el "servicio que hace todo" del título de la clase).
-- Refactor: extraer `AccountValidator`, `NotificationService`, `AuditLogger`.
-- Regla práctica: "si para describir qué hace la clase necesitas la palabra 'y', probablemente viola SRP".
+Slide: [`clase_6/slides-clase-07.html`](clase_6/slides-clase-07.html)
 
-**Demo/código:**
+> "Una clase debe tener una sola razón para cambiar."
+
+El `AccountService` de la Clase 4 se descompone en servicios cohesivos, cada uno con una sola responsabilidad y su propia interfaz:
+
+- `AccountService` (`IAccountService`) — alta y consulta de cuentas
+- `TransferService` (`ITransferService`) — ejecutar una transferencia
+- `TransactionQueryService` (`ITransactionQueryService`) — consultar transacciones
+
 ```java
-// ANTES — viola SRP
+// account/service/AccountService.java
 @Service
-public class AccountService {
-    public Account crear(Account account) {
-        if (account.getEmail() == null) throw new IllegalArgumentException("email requerido");
-        Account saved = repository.save(account);
-        emailSender.enviar(saved.getEmail(), "Cuenta creada");
-        auditLog.registrar("CREATE_ACCOUNT", saved.getId());
-        return saved;
-    }
-}
+@RequiredArgsConstructor
+public class AccountService implements IAccountService {
+    private final AccountRepository accountRepository;
 
-// DESPUÉS — responsabilidades separadas
-@Service
-public class AccountService {
-    private final AccountRepository repository;
-    private final AccountValidator validator;
-    private final NotificationService notifier;
-    private final AuditLogger audit;
+    @Override
+    public Account create(Account account) { return accountRepository.save(account); }
 
-    public Account crear(Account account) {
-        validator.validar(account);
-        Account saved = repository.save(account);
-        notifier.notificarCreacion(saved);
-        audit.registrar("CREATE_ACCOUNT", saved.getId());
-        return saved;
+    @Override
+    public List<Account> findAll() { return accountRepository.findAll(); }
+
+    @Override
+    public Account findById(Long id) {
+        return accountRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Cuenta no encontrada"));
     }
 }
 ```
-
-**Actividad:** el equipo, en parejas, encuentra otra responsabilidad oculta en el código de la Clase 4 y la extrae.
-
-**Slides sugeridos:**
-1. SRP en una frase
-2. AccountService "que hace todo" (código)
-3. Las 3 responsabilidades escondidas
-4. AccountService refactorizado
-5. Regla práctica para detectar violaciones de SRP
 
 ---
 
 ## Clase 7 — Open/Closed: extender sin romper
-**Duración:** 30 min
-**Objetivo:** agregar comportamiento nuevo sin modificar código existente.
 
-**Contenido:**
-- Escenario: calcular una tasa de mantenimiento distinta para `SAVINGS` y `CHECKING`, resuelto primero con `if/else` sobre el enum (viola OCP: cada cuenta nueva obliga a tocar el método).
-- Refactor con Strategy: interfaz `AccountFeePolicy`, implementaciones `SavingsFeePolicy` y `CheckingFeePolicy`, resueltas por Spring vía `Map<AccountType, AccountFeePolicy>` o un bean por tipo.
+Slide: [`clase_7/slides-clase-08.html`](clase_7/slides-clase-08.html)
 
-**Demo/código:**
+> "Abierto para extensión, cerrado para modificación."
+
+El `if/else` de comisiones se reemplaza por **Strategy Pattern**: una interfaz `FeeCalculator` con una implementación por tipo de cuenta. Agregar un nuevo tipo de cuenta significa agregar una clase nueva, no tocar el `if/else` existente.
+
 ```java
-// ANTES — viola OCP
-public BigDecimal calcularTasa(Account account) {
-    if (account.getType() == AccountType.SAVINGS) return BigDecimal.valueOf(0.01);
-    if (account.getType() == AccountType.CHECKING) return BigDecimal.valueOf(0.02);
-    throw new IllegalStateException("tipo no soportado");
+// transaction/service/fee/FeeCalculator.java
+public interface FeeCalculator {
+    boolean supports(String accountType);
+    BigDecimal calculate(BigDecimal amount);
 }
-
-// DESPUÉS — abierto a extensión, cerrado a modificación
-public interface AccountFeePolicy {
-    AccountType tipoSoportado();
-    BigDecimal calcularTasa(Account account);
-}
-
-@Component
-public class SavingsFeePolicy implements AccountFeePolicy {
-    public AccountType tipoSoportado() { return AccountType.SAVINGS; }
-    public BigDecimal calcularTasa(Account account) { return BigDecimal.valueOf(0.01); }
-}
-// Agregar un tercer tipo de cuenta = una clase nueva, cero líneas tocadas en las existentes
 ```
 
-**Actividad:** el equipo diseña (sin codear) cómo agregarían un tercer tipo de cuenta, `BUSINESS`, sin tocar las clases existentes.
+```java
+// transaction/service/fee/SavingFeeCalculator.java
+@Component
+public class SavingFeeCalculator implements FeeCalculator {
+    @Override
+    public boolean supports(String accountType) { return "SAVINGS".equals(accountType); }
 
-**Slides sugeridos:**
-1. OCP en una frase
-2. El if/else que crece para siempre
-3. Strategy: la interfaz AccountFeePolicy
-4. Agregar un tipo nuevo = una clase nueva
-5. Ejercicio: diseñar BUSINESS
+    @Override
+    public BigDecimal calculate(BigDecimal amount) { return amount.multiply(new BigDecimal("0.01")); }
+}
+```
+
+```java
+// transaction/service/fee/CheckingFeeCalculator.java
+@Component
+public class CheckingFeeCalculator implements FeeCalculator {
+    @Override
+    public boolean supports(String accountType) { return "CHECKING".equals(accountType); }
+
+    @Override
+    public BigDecimal calculate(BigDecimal amount) { return amount.multiply(new BigDecimal("0.015")); }
+}
+```
+
+```java
+// transaction/service/fee/DefaultFeeCalculator.java — fallback para tipos sin comisión
+@Component
+public class DefaultFeeCalculator implements FeeCalculator {
+    @Override
+    public boolean supports(String accountType) { return true; }
+
+    @Override
+    public BigDecimal calculate(BigDecimal amount) { return BigDecimal.ZERO; }
+}
+```
+
+Spring inyecta automáticamente **todas** las implementaciones de `FeeCalculator` en una `List<FeeCalculator>`. El `TransferService` recorre la lista y usa la primera que `supports()` el tipo de cuenta — sin conocer ninguna implementación concreta:
+
+```java
+// transaction/service/TransferService.java (fragmento)
+BigDecimal fee = feeCalculators.stream()
+        .filter(fc -> fc.supports(from.getType()))
+        .findFirst()
+        .orElseThrow(() -> new RuntimeException("No hay calculador para el tipo: " + from.getType()))
+        .calculate(amount);
+```
 
 ---
 
 ## Clase 8 — Liskov: herencia que no miente
-**Duración:** 30 min
-**Objetivo:** detectar cuándo una jerarquía de herencia rompe el contrato del padre.
 
-**Contenido:**
-- Escenario tentador: `SavingsAccount extends Account` con un método `retirar()` que lanza excepción si el retiro deja el balance bajo un mínimo — y `CheckingAccount extends Account` que sobreescribe `retirar()` permitiendo saldo negativo hasta un límite. Mostrar cómo un código que trata a todos como `Account` se rompe según el subtipo real.
-- Regla práctica: si necesitas un `instanceof` para saber cómo tratar a un objeto, probablemente ya violaste LSP.
-- Solución en este dominio: preferir composición (`AccountFeePolicy`, ya visto en Clase 7) sobre herencia para variar comportamiento por tipo de cuenta.
+Slide: [`clase_8/slides-clase-09 (1).html`](clase_8/slides-clase-09%20%281%29.html)
 
-**Demo/código:**
-```java
-// VIOLACIÓN — el subtipo cambia el contrato del padre
-class Account {
-    public void retirar(BigDecimal monto) {
-        if (monto.compareTo(balance) > 0) throw new SaldoInsuficienteException();
-        balance = balance.subtract(monto);
-    }
-}
+> "Si S es subtipo de T, cualquier instancia de T debería poder reemplazarse por S sin alterar el comportamiento."
 
-class CheckingAccount extends Account {
-    @Override
-    public void retirar(BigDecimal monto) {
-        // "silenciosamente" permite sobregiro — un cliente que espera el contrato del padre se rompe
-        balance = balance.subtract(monto);
-    }
-}
-```
+> "Si el hijo no puede hacer lo que hace el padre, no debería heredar de él."
 
-**Actividad:** el equipo revisa el código de la Clase 4 y confirma que, al NO haber usado herencia para `AccountType`, ya evitaron esta trampa sin saberlo — conectar con la decisión de la Clase 7.
+**¿Y en atlas-bank?** No todo principio se tiene que forzar en cada proyecto — atlas-bank no usa jerarquías de herencia propias hoy, así que LSP no aplica de forma directa, pero define el criterio para el día en que aparezca `extends` o `@Override`.
 
-**Slides sugeridos:**
-1. LSP en una frase
-2. La jerarquía tentadora: SavingsAccount / CheckingAccount
-3. Dónde se rompe el contrato
-4. Por qué composición > herencia en este caso
-5. Conexión con la Strategy de la clase anterior
+¿Cuándo pensarlo?
+
+- Cuando se usa herencia entre clases (`extends`)
+- Cuando se sobreescriben métodos (`@Override`)
+- Cuando un subtipo lanza excepciones inesperadas o ignora parámetros
+- Pregunta clave: *¿puedo usar cualquier hijo en el lugar del padre sin que nada se rompa?*
 
 ---
 
-## Clase 9 — Interface Segregation: interfaces que no estorban
-**Duración:** 25 min
-**Objetivo:** dividir una interfaz gorda en contratos específicos por consumidor.
+## Clase 9 — Interface segregation: interfaces que no estorban
 
-**Contenido:**
-- Escenario: una interfaz `AccountOperations` con `crear`, `listar`, `buscarPorId`, `cerrar`, `generarDashboard`, `exportarReporte` — el Controller solo necesita 4 de esos 6 métodos, pero se ve forzado a depender de todos.
-- Refactor: `AccountReader`, `AccountWriter`, separadas por quién las consume.
+Slide: [`clase_9/slides-clase-10.html`](clase_9/slides-clase-10.html)
 
-**Demo/código:**
-```java
-// ANTES — interfaz gorda
-public interface AccountOperations {
-    Account crear(Account account);
-    List<Account> listar();
-    Account buscarPorId(Long id);
-    Account cerrar(Long id);
-    DashboardDTO generarDashboard(Long id);
-    byte[] exportarReporte(Long id);
-}
+> "Ningún cliente debería depender de métodos que no utiliza."
 
-// DESPUÉS — segregada por responsabilidad de quien consume
-public interface AccountReader {
-    List<Account> listar();
-    Account buscarPorId(Long id);
-}
+**¿Y en atlas-bank?** Hoy no hay interfaces propias sobre los repositories (son de Spring Data, no las define el equipo) — no tiene sentido segregar algo que no se creó. Pero cuando llegue la Arquitectura Hexagonal (secciones siguientes), cada **puerto** va a ser una interfaz específica: ISP en acción.
 
-public interface AccountWriter {
-    Account crear(Account account);
-    Account cerrar(Long id);
-}
-```
+¿Cuándo pensarlo?
 
-**Actividad:** el equipo identifica qué interfaz consumiría el futuro `AI Agent` (de la colección Postman) — spoiler consciente de que probablemente solo necesite `AccountReader`.
-
-**Slides sugeridos:**
-1. ISP en una frase
-2. La interfaz AccountOperations, gorda
-3. Quién usa qué método realmente
-4. AccountReader / AccountWriter
-5. Pregunta: ¿qué interfaz necesitaría el AI Agent?
+- Cuando una interfaz tiene más de 5-6 métodos
+- Cuando distintos clientes usan subconjuntos diferentes de la misma interfaz
+- Cuando un cambio afecta clases que no usan ese método
+- Al definir contratos entre capas (puertos en Hexagonal)
+- Pregunta clave: *¿esta clase necesita TODOS estos métodos?*
 
 ---
 
-## Clase 10 — Dependency Inversion: depender de abstracciones
-**Duración:** 35 min
-**Objetivo:** que el servicio dependa de una interfaz, no de una implementación concreta — y sembrar el concepto de puertos, que se retoma en arquitectura hexagonal más adelante.
+## Clase 10 — Dependency inversion: depender de abstracciones
 
-**Contenido:**
-- Mostrar `AccountService` dependiendo directo de `JpaAccountRepositoryImpl` (clase concreta) vs dependiendo de la interfaz `AccountRepository`.
-- [PROBABLE] Este es el punto exacto del curso donde conviene decir en voz alta: "esto que estamos haciendo — depender de una abstracción — es la base de lo que en la próxima presentación va a llamarse 'puerto' en arquitectura hexagonal". No lo desarrolles todavía, solo plantá la semilla.
+Slide: [`clase_10/slides-clase-11.html`](clase_10/slides-clase-11.html)
 
-**Demo/código:**
+> "Depender de abstracciones, no de implementaciones concretas."
+
+- Sin DIP: el negocio depende de la infraestructura
+- Con DIP: ambos dependen de una **abstracción**
+- El control se invierte: el **dominio** define lo que necesita, la infraestructura se adapta a él (no al revés)
+- Es la base de la Arquitectura Hexagonal
+
+En atlas-bank esto ya se ve en los controllers: dependen de la interfaz, no de la implementación.
+
 ```java
-// VIOLACIÓN — depende de la implementación concreta
-@Service
-public class AccountService {
-    private final JpaAccountRepositoryImpl repository; // clase concreta de infraestructura
-}
-
-// CORRECTO — depende de la abstracción
-@Service
-public class AccountService {
-    private final AccountRepository repository; // interfaz — Spring inyecta la implementación
+// account/controller/AccountController.java
+@RestController
+@RequestMapping("/api/v1/accounts")
+@RequiredArgsConstructor
+public class AccountController {
+    private final IAccountService accountService; // interfaz, no AccountService concreto
+    ...
 }
 ```
 
-**Actividad:** el equipo dibuja (en un miro/pizarra) la flecha de dependencia antes y después — de "Service → Implementación" a "Service → Interfaz ← Implementación".
+```java
+// transaction/controller/TransactionController.java
+@RestController
+@RequestMapping("/api/v1/transactions")
+@RequiredArgsConstructor
+public class TransactionController {
+    private final ITransferService transferService;
+    private final ITransactionQueryService transactionQueryService;
+    ...
+}
+```
 
-**Slides sugeridos:**
-1. DIP en una frase
-2. Service dependiendo de la clase concreta (mal)
-3. Service dependiendo de la interfaz (bien)
-4. La flecha de dependencia se invierte (diagrama)
-5. Semilla: esto es un "puerto" — se retoma en la próxima presentación
+Por qué se llama "inversión": el dominio define el contrato (la interfaz), la infraestructura lo implementa. Esto habilita:
+
+- **Hexagonal**: el dominio define puertos (interfaces), los adaptadores los implementan (JPA, REST, AI)
+- **Testing**: mockear la interfaz, testear sin levantar Spring
+- Intercambiabilidad: si el dominio no depende de infraestructura concreta, se puede reemplazar sin tocarlo
 
 ---
 
-## Clase 11 — Inyección de dependencias: qué es y cómo funciona
-**Duración:** 35 min
-**Objetivo:** entender el mecanismo de Spring que hace posible todo lo visto en la Clase 10, y resolver ambigüedad con `@Qualifier`/`@Primary`.
+## Clase 11 — Inyección de dependencia: qué es y cómo funciona
 
-**Contenido:**
-- Constructor injection vs field injection (`@Autowired` en el campo) — por qué constructor injection es la práctica recomendada (inmutabilidad, testeable sin reflection, dependencias explícitas).
-- Escenario de ambigüedad: dos implementaciones de `NotificationService` (`EmailNotificationService`, `SmsNotificationService`) — Spring no puede elegir sola.
-- `@Primary` para fijar un default, `@Qualifier` para forzar una elección explícita.
+Slide: [`clase_11/slides-clase-12 (1).html`](clase_11/slides-clase-12%20%281%29.html)
 
-**Demo/código:**
+> "Que Spring te dé una instancia lista para usar, sin que vos hagas `new`."
+
+- Spring crea **una única instancia** de cada bean al arrancar (scope **Singleton**, el default)
+- Esa instancia se reutiliza en toda la app: si 3 controllers necesitan `AccountService`, los 3 reciben el mismo objeto
+- No hay copias múltiples en memoria
+
+**Field injection vs constructor injection** — atlas-bank usa constructor injection (vía `@RequiredArgsConstructor` de Lombok) en todos los services y controllers:
+
 ```java
-// Field injection — evitar
+// ❌ Field injection
 @Service
-public class AccountService {
+public class TransferService {
     @Autowired
-    private AccountRepository repository; // no es final, difícil de testear
-}
-
-// Constructor injection — recomendado
-@Service
-public class AccountService {
-    private final AccountRepository repository;
-    public AccountService(AccountRepository repository) {
-        this.repository = repository;
-    }
-}
-
-// Ambigüedad resuelta
-public interface NotificationService { void enviar(String destino, String mensaje); }
-
-@Primary
-@Component
-public class EmailNotificationService implements NotificationService { /* ... */ }
-
-@Component
-public class SmsNotificationService implements NotificationService { /* ... */ }
-
-@Service
-public class AccountService {
-    private final NotificationService notifier;
-    public AccountService(@Qualifier("smsNotificationService") NotificationService notifier) {
-        this.notifier = notifier;
-    }
+    private AccountRepository repo;
+    // Dependencia oculta, no es final (mutable), necesita Spring para testear
 }
 ```
 
-**Actividad:** el equipo agrega una segunda implementación de una interfaz propia del proyecto y resuelve la ambigüedad con `@Qualifier` en vivo.
+```java
+// ✅ Constructor injection — el estándar del proyecto
+@Service
+@RequiredArgsConstructor
+public class TransferService {
+    private final AccountRepository repo;
+    // Dependencia explícita, final (inmutable), testeable sin Spring
+}
+```
 
-**Slides sugeridos:**
-1. Constructor injection vs field injection (comparación)
-2. Por qué constructor injection gana (testeable, inmutable, explícito)
-3. El problema: dos implementaciones, una interfaz
-4. @Primary: el default
-5. @Qualifier: la elección explícita
+Cuando existe más de una implementación de una interfaz (como con `FeeCalculator` en la Clase 7), Spring necesita saber cuál inyectar. Ahí entran `@Qualifier` (elegir una implementación específica por nombre) y `@Primary` (marcar una implementación como default). En atlas-bank se resolvió con **collection injection** (`List<FeeCalculator>` + `supports()`), una alternativa a `@Qualifier`/`@Primary` que evita el `if/else` y escala mejor cuando aparecen nuevos tipos de cuenta.
 
 ---
 
 ## Clase 12 — Package-by-layer vs package-by-feature
-**Duración:** 40 min
-**Objetivo:** refactorizar la estructura de paquetes del proyecto ya construido.
 
-**Contenido:**
-- Estructura actual (package-by-layer): `com.atlasbank.controller`, `com.atlasbank.service`, `com.atlasbank.repository`, `com.atlasbank.model` — mostrar cómo, al crecer el dominio (agregar `Transaction` en el futuro), cada paquete se llena de clases de features distintas mezcladas.
-- Refactor a package-by-feature: `com.atlasbank.account.{controller,service,repository,model}`.
-- [PROBABLE] Mencionar que esta reorganización por feature es, además, el primer paso естructural hacia los paquetes `domain/application/infrastructure` que va a pedir la arquitectura hexagonal en la próxima presentación — no es solo estética, es preparación.
+Refactor del proyecto de una organización por capas técnicas (todos los controllers juntos, todos los services juntos, todas las entities juntas) a una organización **por feature**, con las capas técnicas anidadas dentro de cada feature.
 
-**Demo/código:**
+| Antes: package-by-layer | Después: package-by-feature |
+|---|---|
+| ![Antes](clase_12/antes.png) | ![Después](clase_12/despues.png) |
+
+Estructura final del proyecto (`proyecto/src/main/java/com/atlas/bank/atlas_bank/`):
+
 ```
-// ANTES — package-by-layer
-com.atlasbank.controller.AccountController
-com.atlasbank.service.AccountService
-com.atlasbank.repository.AccountRepository
-com.atlasbank.model.Account
-
-// DESPUÉS — package-by-feature
-com.atlasbank.account.AccountController
-com.atlasbank.account.AccountService
-com.atlasbank.account.AccountRepository
-com.atlasbank.account.Account
+account/
+├── controller/AccountController.java
+├── model/Account.java
+├── repository/AccountRepository.java
+└── service/
+    ├── AccountService.java
+    └── IAccountService.java
+transaction/
+├── controller/TransactionController.java
+├── model/Transaction.java
+├── repository/TransactionRepository.java
+└── service/
+    ├── TransactionQueryService.java / ITransactionQueryService.java
+    ├── TransferService.java / ITransferService.java
+    └── fee/
+        ├── FeeCalculator.java
+        ├── DefaultFeeCalculator.java
+        ├── CheckingFeeCalculator.java
+        └── SavingFeeCalculator.java
 ```
 
-**Actividad:** el equipo hace el refactor de paquetes en vivo sobre el proyecto de la Clase 4, usando el refactor tool del IDE (no manual) y corre los tests después para confirmar que nada se rompió.
-
-**Slides sugeridos:**
-1. Package-by-layer: la estructura actual
-2. El problema cuando el dominio crece (spoiler: Transaction)
-3. Package-by-feature: la estructura nueva
-4. Comparación lado a lado
-5. Esto es el primer paso hacia hexagonal (semilla para la próxima presentación)
+Ventaja: cada feature (`account`, `transaction`) es autocontenida — para tocar transferencias solo se navega dentro de `transaction/`, sin saltar entre paquetes técnicos dispersos por todo el proyecto.
 
 ---
 
 ## Clase 13 — Checkpoint del proyecto
-**Duración:** 60 min
-**Objetivo:** validar que el proyecto `atlas-bank` cumple, de forma verificable, todo lo enseñado en la Sección 1 — ni más ni menos.
 
-**Criterios de aceptación (checklist literal a proyectar):**
-- [ ] `POST /api/v1/accounts` crea una cuenta (contra la colección Postman real del equipo)
-- [ ] `GET /api/v1/accounts` lista todas las cuentas
-- [ ] `GET /api/v1/accounts/{id}` devuelve una cuenta por id
-- [ ] `PATCH /api/v1/accounts/{id}/close` cambia el status a `CLOSED`
-- [ ] `GET /api/v1/accounts/{id}/dashboard` — **excluido de este checkpoint** o implementado como stub explícito (depende de Transactions, fuera de alcance)
-- [ ] `AccountService` inyectado por constructor, sin field injection
-- [ ] Al menos una responsabilidad extraída fuera de `AccountService` (SRP, Clase 6)
-- [ ] Al menos una variación de comportamiento resuelta con Strategy en vez de `if/else` (OCP, Clase 7)
-- [ ] Ninguna clase depende de una implementación concreta de repositorio (DIP, Clase 10)
-- [ ] Estructura de paquetes por feature (`com.atlasbank.account.*`), no por capa
+Slide: [`clase_13/slides-clase-14 (1).html`](clase_13/slides-clase-14%20%281%29.html)
 
-**Actividad:** cada compañero corre su propia copia del proyecto contra la colección Postman completa y marca el checklist en vivo. Los que no cumplan algún ítem lo resuelven ahí mismo con ayuda del grupo (no se avanza a la Presentación 2 con deuda pendiente).
+**Antes (Clase 4) → Ahora (Clase 13)**
 
-**Slides sugeridos:**
-1. El checklist completo (proyectado)
-2. Demo en vivo: correr la colección Postman contra el proyecto final
-3. Qué queda explícitamente fuera (dashboard, transactions, auth, AI agent)
-4. Qué viene en la Presentación 2 (arquitectura hexagonal — gancho de cierre)
+| Antes (Clase 4) | Ahora (Clase 13) |
+|---|---|
+| Un solo paquete plano | Package-by-feature con capas internas |
+| `AccountService` con 5 responsabilidades | Services separados por responsabilidad |
+| Entity directa como request y response | (se resuelve con DTOs en la Sección 2) |
+| `RuntimeException` para todo | (se resuelve con `ProblemDetail` en la Sección 2) |
+| `if/else` de comisiones hardcodeado | Comisiones con `FeeCalculator` (Strategy) |
+| Cuentas y transacciones mezcladas | Controllers e interfaces separados por feature |
+| — | Constructor injection + API versionada (`/api/v1/...`) |
+
+Lo que se aprendió:
+
+- **SRP**: una sola razón para cambiar
+- **OCP**: extender sin modificar (`FeeCalculator`)
+- **LSP**: si el hijo no cumple el contrato, no debería heredar
+- **ISP**: contratos específicos → se aplica en Hexagonal
+- **DIP**: depender de abstracciones → base de Hexagonal
+- Constructor injection como estándar
+- Package-by-feature con capas internas
+- API versionada con `/v1/`
+
+**Qué sigue (Sección 2 — Arquitectura en capas con criterio):**
+
+- DTOs — separar lo que se expone de lo que se persiste
+- `ProblemDetail` — errores con el estándar RFC 7807
+- Bean Validation — validación como primera línea de defensa
+- El service como orquestador, no como Dios
 
 ---
 
-## Anexo — Modelo extraído de la colección Postman (fuente de verdad para todos los ejemplos de código)
+## Referencia rápida del proyecto
 
-**Endpoints dentro de alcance de esta presentación (carpeta "Accounts"):**
-| Método | Endpoint | Clase donde se implementa |
-|--------|----------|---------------------------|
-| POST | `/api/v1/accounts` | Clase 4 |
-| GET | `/api/v1/accounts` | Clase 4 |
-| GET | `/api/v1/accounts/{id}` | Clase 4 |
-| PATCH | `/api/v1/accounts/{id}/close` | Clase 13 |
-| GET | `/api/v1/accounts/{id}/dashboard` | Fuera de alcance — ver nota de la Clase 13 |
-
-**Endpoints fuera de alcance (presentaciones futuras):**
-- `Auth` (Keycloak): `POST /realms/atlas-bank/protocol/openid-connect/token`
-- `Transactions`: `POST /api/v1/transactions/transfer`, `GET /api/v1/transactions/{id}/transactions`
-- `AI Agent`: `POST /api/v1/ai/chat`
+- Código fuente: [`/proyecto/src/main/java/com/atlas/bank/atlas_bank`](../proyecto/src/main/java/com/atlas/bank/atlas_bank)
+- API: `GET/POST /api/v1/accounts`, `GET /api/v1/accounts/{id}`, `POST /api/v1/transactions/transfer`, `GET /api/v1/transactions/{id}/transactions`
+- Historial de la evolución del código: `git log --oneline` sobre `/proyecto` (commits: *proyecto sin SOLID*, *Single Responsibility*, *Open Closed*, *fix service query*, *dependency inversion*, *package by layer-feature*)
