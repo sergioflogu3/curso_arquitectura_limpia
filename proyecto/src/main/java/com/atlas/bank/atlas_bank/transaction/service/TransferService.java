@@ -1,8 +1,8 @@
 package com.atlas.bank.atlas_bank.service;
 
-import com.atlas.bank.atlas_bank.model.Account;
+import com.atlas.bank.atlas_bank.account.model.Account;
 import com.atlas.bank.atlas_bank.model.Transaction;
-import com.atlas.bank.atlas_bank.repository.AccountRepository;
+import com.atlas.bank.atlas_bank.account.repository.AccountRepository;
 import com.atlas.bank.atlas_bank.repository.TransactionRepository;
 import com.atlas.bank.atlas_bank.service.fee.FeeCalculator;
 import lombok.RequiredArgsConstructor;

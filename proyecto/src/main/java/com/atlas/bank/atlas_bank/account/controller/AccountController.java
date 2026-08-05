@@ -1,6 +1,6 @@
 package com.atlas.bank.atlas_bank.controller;
 
-import com.atlas.bank.atlas_bank.model.Account;
+import com.atlas.bank.atlas_bank.account.model.Account;
 import com.atlas.bank.atlas_bank.model.Transaction;
 import com.atlas.bank.atlas_bank.service.*;
 import lombok.RequiredArgsConstructor;
