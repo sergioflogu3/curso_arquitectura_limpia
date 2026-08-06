@@ -1,5 +1,7 @@
 package com.atlas.bank.atlas_bank.transaction.controller;
 
+import com.atlas.bank.atlas_bank.transaction.dto.TransactionResponse;
+import com.atlas.bank.atlas_bank.transaction.dto.TransferRequest;
 import com.atlas.bank.atlas_bank.transaction.model.Transaction;
 import com.atlas.bank.atlas_bank.transaction.service.ITransactionQueryService;
 import com.atlas.bank.atlas_bank.transaction.service.ITransferService;
@@ -18,14 +20,34 @@ public class TransactionController {
     private final ITransactionQueryService transactionQueryService;
 
     @PostMapping("/transfer")
-    public ResponseEntity<Transaction> transfer(@RequestParam Long fromId,
-                                                @RequestParam Long toId,
-                                                @RequestParam BigDecimal amount){
-        return ResponseEntity.ok(transferService.execute(fromId, toId, amount));
+    public ResponseEntity<TransactionResponse> transfer(@RequestBody TransferRequest request){
+        Transaction transaction = transferService.execute(
+                request.getFromAccountId(),
+                request.getToAccountId(),
+                request.getAmount()
+        );
+        return ResponseEntity.ok(toResponse(transaction));
     }
 
     @GetMapping("/{id}/transactions")
-    public ResponseEntity<List<Transaction>> getTransactions(@PathVariable Long id){
-        return ResponseEntity.ok(transactionQueryService.getByAccountId(id));
+    public ResponseEntity<List<TransactionResponse>> getTransactions(@PathVariable Long id){
+        List<TransactionResponse> responses = transactionQueryService.getByAccountId(id)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+        return ResponseEntity.ok(responses);
+    }
+
+    private TransactionResponse toResponse(Transaction transaction){
+        TransactionResponse response = new TransactionResponse();
+        response.setId(transaction.getId());
+        response.setType(transaction.getType());
+        response.setSourceAccountId(transaction.getSourceAccountId());
+        response.setTargetAccountId(transaction.getTargetAccountId());
+        response.setAmount(transaction.getAmount());
+        response.setFee(transaction.getFee());
+        response.setStatus(transaction.getStatus());
+        response.setCreatedAt(transaction.getCreatedAt());
+        return response;
     }
 }

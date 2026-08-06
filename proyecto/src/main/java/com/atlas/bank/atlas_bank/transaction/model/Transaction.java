@@ -16,19 +16,12 @@ public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String type; // DEPOSIT, WITHDRAWAL, TRANSFER
-
     private Long sourceAccountId;
-
     private Long targetAccountId;
-
     private BigDecimal amount;
-
     private BigDecimal fee;
-
     private String status; // PENDING, EXECUTED, REJECTED
-
     private LocalDateTime createdAt;
 
     @PrePersist
