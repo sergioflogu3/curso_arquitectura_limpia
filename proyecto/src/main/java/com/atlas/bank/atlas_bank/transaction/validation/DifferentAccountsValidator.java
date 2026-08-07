@@ -7,7 +7,10 @@ import jakarta.validation.ConstraintValidatorContext;
 public class DifferentAccountsValidator implements ConstraintValidator<DifferentAccounts, TransferRequest> {
     @Override
     public boolean isValid(TransferRequest transferRequest, ConstraintValidatorContext constraintValidatorContext) {
-        return true;
+        if (transferRequest.getFromAccountId() == null || transferRequest.getToAccountId() == null) {
+            return true;
+        }
+        return !transferRequest.getFromAccountId().equals(transferRequest.getToAccountId());
     }
 
 }
