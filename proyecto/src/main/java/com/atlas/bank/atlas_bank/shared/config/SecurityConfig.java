@@ -12,6 +12,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.web.SecurityFilterChain;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Configuration
@@ -47,14 +48,20 @@ public class SecurityConfig {
         return http.build();
     }
 
+    private static final String CLIENT_ID = "atlas-bank-api";
+
     private JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter(jwt -> {
-            var realmAccess = jwt.getClaimAsMap("realm_access");
-            if (realmAccess == null  || realmAccess.get("roles") == null) {
+            var resourceAccess = jwt.getClaimAsMap("resource_access");
+            if (resourceAccess == null || resourceAccess.get(CLIENT_ID) == null) {
                 return List.of();
             }
-            var roles = (List<String>) realmAccess.get("roles");
+            var clientAccess = (Map<String, Object>) resourceAccess.get(CLIENT_ID);
+            if (clientAccess.get("roles") == null) {
+                return List.of();
+            }
+            var roles = (List<String>) clientAccess.get("roles");
             return roles.stream()
                     .map(role -> new SimpleGrantedAuthority(role))
                     .collect(Collectors.toList());
