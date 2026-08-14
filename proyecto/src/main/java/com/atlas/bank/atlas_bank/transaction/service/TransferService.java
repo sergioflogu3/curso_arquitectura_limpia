@@ -16,11 +16,17 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
-public class TransferService implements ITransferService{
+public class TransferService extends TransactionProcessor<TransferContext> implements ITransferService{
     private final AccountRepository accountRepository;
-    private final TransactionRepository transactionRepository;
     private final List<FeeCalculator> feeCalculators;
+
+    public TransferService(TransactionRepository transactionRepository,
+                           AccountRepository accountRepository,
+                           List<FeeCalculator> feeCalculators) {
+        super(transactionRepository);
+        this.accountRepository = accountRepository;
+        this.feeCalculators = feeCalculators;
+    }
 
     @Override
     @Transactional
@@ -72,5 +78,25 @@ public class TransferService implements ITransferService{
     public List<Transaction> getTransactions(Long accountId) {
         return transactionRepository
                 .findBySourceAccountIdOrTargetAccountId(accountId, accountId);
+    }
+
+    @Override
+    protected void validate(TransferContext context) {
+
+    }
+
+    @Override
+    protected BigDecimal calculateFee(TransferContext context) {
+        return null;
+    }
+
+    @Override
+    protected void execute(TransferContext context, BigDecimal fee) {
+
+    }
+
+    @Override
+    protected Transaction save(TransferContext context, BigDecimal fee) {
+        return null;
     }
 }
