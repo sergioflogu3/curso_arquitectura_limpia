@@ -36,43 +36,7 @@ public class TransferService extends TransactionProcessor<TransferContext> imple
                 .orElseThrow(() -> new AccountNotFoundException(fromId));
         Account to = accountRepository.findById(toId)
                 .orElseThrow(() -> new AccountNotFoundException(toId));
-
-        // Validar que la cuenta esté activa
-        if (!"ACTIVE".equals(from.getStatus())) {
-            throw new AccountNotActiveException(fromId, from.getStatus());
-        }
-        if (!"ACTIVE".equals(to.getStatus())) {
-            throw new AccountNotActiveException(toId, to.getStatus());
-        }
-
-        // Validar fondos
-        if (from.getBalance().compareTo(amount) < 0) {
-            throw new InsufficientFoundsException(fromId, from.getBalance(), amount);
-        }
-
-        // Calcular comisión — hardcodeada
-        BigDecimal fee = feeCalculators.stream()
-                .filter(fc -> fc.supports(from.getType()))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("No hay calculador para el tipo: " + from.getType()))
-                .calculate(amount);
-
-        // Actualizar saldos
-        from.setBalance(from.getBalance().subtract(amount).subtract(fee));
-        to.setBalance(to.getBalance().add(amount));
-        accountRepository.save(from);
-        accountRepository.save(to);
-
-        // Crear transacción
-        Transaction transaction = new Transaction();
-        transaction.setType("TRANSFER");
-        transaction.setSourceAccountId(fromId);
-        transaction.setTargetAccountId(toId);
-        transaction.setAmount(amount);
-        transaction.setFee(fee);
-        transaction.setStatus("EXECUTED");
-
-        return transactionRepository.save(transaction);
+        return process(new TransferContext(from, to, amount));
     }
 
     public List<Transaction> getTransactions(Long accountId) {
@@ -82,21 +46,49 @@ public class TransferService extends TransactionProcessor<TransferContext> imple
 
     @Override
     protected void validate(TransferContext context) {
+        // Validar que la cuenta esté activa
+        if (!"ACTIVE".equals(context.from().getStatus())) {
+            throw new AccountNotActiveException(context.from().getId(), context.from().getStatus());
+        }
+        if (!"ACTIVE".equals(context.to().getStatus())) {
+            throw new AccountNotActiveException(context.to().getId(), context.to().getStatus());
+        }
 
+        // Validar fondos
+        if (context.from().getBalance().compareTo(context.amount()) < 0) {
+            throw new InsufficientFoundsException(context.from().getId(), context.from().getBalance(), context.amount());
+        }
     }
 
     @Override
     protected BigDecimal calculateFee(TransferContext context) {
-        return null;
+        // Calcular comisión — hardcodeada
+        return feeCalculators.stream()
+                .filter(fc -> fc.supports(context.from().getType()))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("No hay calculador para el tipo: " + context.from().getType()))
+                .calculate(context.amount());
     }
 
     @Override
     protected void execute(TransferContext context, BigDecimal fee) {
-
+        // Actualizar saldos
+        context.from().setBalance(context.from().getBalance().subtract(context.amount()).subtract(fee));
+        context.to().setBalance(context.to().getBalance().add(context.amount()));
+        accountRepository.save(context.from());
+        accountRepository.save(context.to());
     }
 
     @Override
     protected Transaction save(TransferContext context, BigDecimal fee) {
-        return null;
+        // Crear transacción
+        Transaction transaction = new Transaction();
+        transaction.setType("TRANSFER");
+        transaction.setSourceAccountId(context.from().getId());
+        transaction.setTargetAccountId(context.to().getId());
+        transaction.setAmount(context.amount());
+        transaction.setFee(fee);
+        transaction.setStatus("EXECUTED");
+        return transactionRepository.save(transaction);
     }
 }
