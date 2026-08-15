@@ -1,52 +1,592 @@
-# Sección 5 — Patrones que Organizan la Lógica
+# Sección 4: Patrones de Diseño Esenciales en Spring
 
-Introducción 
-Hola equipo bienvenidos a una nueva sesión número 5 vamos a comenzar con patrones vamos a comenzar con patrones que organizan la lógica esto es 100% verdad sí y no porque podemos decir que observer no solo organizar lógica sino que además también conecta piezas pero bueno teníamos que poner observer en algún lado y decidimos hacerlo en la sección número 5 strategy va a ser el punto de partida strategy ya lo vimos en la sección número dos cuando trabajamos con el principio de abierto cerrado el principio solid y ahí nosotros resolvimos una problemática y vimos cómo se implementa una strategy pero ahora lo vamos a hacer lo vamos a ver si quiere desde un punto de vista más técnico y también vamos a plantear alguna tarea ya que lo conocemos también vamos a trabajar con template y para presentar este patrón hay que decir que js template utiliza esta estrategia podríamos decir este patrón porque qué hace básicamente el emprendimiento bueno temple método es una clase abstracta que tiene un método público tiene métodos abstractos y ejecute esos métodos abstractos en un orden inalterable y esa es la idea que haya clases que extiendan de esa clase extreta y que obviamente implementen esos métodos abstentos de la manera que lo necesitan es muy interesante ver cómo funciona esto esto es Por otra parte ustedes van a tener el factory no un patrón creacional que nos va a permitir si quiere desacoplar la creación de objetos de diferentes servicios clases y obviamente esto enriquece mucho nuestra aplicación y nos permite separar la lógica de construcción de los objetos de bueno de otra lógica asociada digamos a un servicio a crear una transacción es decir hacer un new de algo se lo vamos a delegar a una fábrica básicamente después aparece el observator podríamos decir de los más conocidos si bien creo que todos un poco son conocidos el observa el conocido porque nosotros podemos asociar observer observable y está bien pero podríamos decir acá nosotros vamos a trabajar desde un punto de vista más metodológico es decir vamos a trabajar con un evento ese evento va a ser publicado o o 1 servicio es decir alguien que publique ese evento y va a ver suscriptores interesados en saber cuándo se publica ese evento para generar sus algoritmos para generar sus procesos sus tareas es decir bueno cada vez que sucede esto yo tengo que hacer esto y esto disparar una serie de efectos secundarios muy interesantes por qué porque de esa manera podríamos decir que un evento tiene asociado efectos secundarios y que gracias a este patrón vamos a poder separar esos efectos secundarios para que ese evento en realidad no se cargue de tanta lógica que sea difícil de mantener y este por último el patrón decorador que es un patrón que agrega comportamiento a una clase y lo vamos a ver no creando un @porque nosotros ya sabemos que cuando hablamos de un decorador estamos hablando de un @algo pero sí vamos a entender ese @es de otro lugar desde el punto de vista más metodológico más técnico no vamos a crear una @para arrobar algo algo que ya hicimos en este curso pero no lo vamos a hacer acá sino que acá lo vamos desde el punto de vista más puro línea por línea vamos a ver cómo se envuelve cuál es la estrategia para envolver otra clase y agregarle comportamiento acá realmente creo que van a aprender un montón de cosas nuevas si entre otras cosas la programación y otra aspecto bien dicho todo esto es importante comprender que ya que comenzamos con los patrones y el punto central podríamos decir de este curso son los patrones hay que entender que cuando nosotros aplicamos patrones en realidad aplicamos seguir una fórmula una manera de resolver un problema pero que no quiere decir que es la única y que no quiere decir que bueno cada vez que tengo que tengo una serie de pasos entonces tengo que utilizar sí o sí emplacement tenemos que analizar o un decorador o lo que tenga que resolver lo que nosotros tenemos es que conocer tener estos contenidos presentes a la hora de diagramar nuestras aplicaciones porque eso va a ser que funcionen mejor que podamos discutir en el equipo sí mira en esta problemática no estaría bien aplicar este patrón bueno esa discusión tiene que estar a la hora de diseñar o a la hora incluso de generar un promo entonces es importante conocerlos por eso lo cual no quiere decir que a partir de ahora son todos patrones y que no aplican patrones está mal porque la realidad también es que las aplicaciones han evolucionado mucho y a veces determinadas librerías o dependencias o clases no solucionan problemas que que antes los teníamos que resolver utilizando mayores pero bueno no quiero tener más esta introducción este es el desafío para esta sección aprender patrones que organizan lógica así que nos vemos en la siguiente clase.
-Clase 0: temas puntuales de la sección
-•	Strategy: reemplazar el switch de comisiones por una interfaz con múltiples implementaciones
-•	Inyección de colecciones en Spring: seleccionar la estrategia correcta en runtime
-•	Template Method: formalizar el flujo validar → calcular → ejecutar → guardar
-•	Factory Method: centralizar decisiones de construcción en TransactionFactory
-•	Observer con ApplicationEventPublisher: desacoplar side effects sin que el service los conozca
-•	Decorator: enriquecer comportamiento sin modificar el service original
+Guía de referencia para el equipo. Resume el contenido de las clases de la sección, con el código real del proyecto **atlas-bank**, las capturas de pantalla y los slides de cada clase. Sirve como material de consulta para quien no vio la clase en vivo, quiera repasar un concepto puntual, o esté retomando el curso y necesite saber por dónde va y qué le falta.
 
-## Clase 1: ¿Por qué patrones de diseño?
+## Qué vas a encontrar
 
-Una nueva sección hasta ahora construimos un monolito con capas claras vídeos validaciones manejo de errores y seguridad con keylor ahora vamos a hacer algo distinto vamos a mirar el código que ya tenemos y vamos a encontrar Dolores y para cada dolor hay un patrón que lo resuelve un patrón sin un dolor es un over ingeniery qué significa esto que un patrón sin un dolor es una sobre ingeniería esta va a ser la regla que vamos a seguir en toda la sección no vamos a implementar patrones porque son elegantes o que está bien hacerlo porque están en un libro vamos a implementar cada patrón porque hay un problema concreto que lo necesita si no hay dolor no hay patrón Ahora bien vayamos a la raíz qué son los patrones de diseño los patrones de diseño son soluciones que se descubrieron resolviendo los mismos problemas una y otra vez no son recetas exactas son ideas cada 1 de estos patrones los implementamos adaptándolos a nuestros proyectos y lo interesante de todo esto es que springboot ya usa patrones por todos lados autowided es una inyección de dependencias @transactional que lo utilizamos en los servicios es un proxy application event publisher es un appserver en esta sección vamos a hacer explícito lo que sprint hace implícito 5 patrones 5 dólares estos van a ser los patrones que vamos a utilizar en esta sección cada fila de esta tabla es una clase primero les muestro el dolor y después la solución strategy elimina el switch the imped method ordena un flujo que se repite factory desacopla la creación observer desacopla los efectos secundarios y de cobrador agrega comportamiento sin tocar código existente antes de finalizar esta clase me gustaría subrayar lo siguiente en la sección número dos cuando nosotros aplicamos open close el principio solid ya que tenemos una interfaz F calculator con 3 implementación como ustedes recordarán eso ya es un strategy solo que nosotros no lo llamamos así pero era una manera de aplicar el principio abierto cerrado y me parecía que era un buen punto de partida y no era tan complejo de enseñar por eso lo incluiríamos en esa parte en esta sección lo vamos a formalizar renombrar y entender por completo no arrancamos de cero como verán evolucionamos lo que ya construimos con esto llegamos al final y seguimos trabajando en la siguiente clase.
+- Por qué un patrón sin un dolor concreto es *overengineering* — la regla que guía toda la sección
+- **Strategy**: de `switch` de comisiones a una interfaz con múltiples implementaciones, inyectadas por Spring como `List<FeeCalculator>`
+- **Template Method**: el flujo `validar → calcular comisión → ejecutar → guardar` formalizado en una clase base abstracta
+- **Factory Method**: la construcción de `Transaction` centralizada en `TransactionFactory`, fuera del service
+- **Observer**: `ApplicationEventPublisher` + `@EventListener` para desacoplar side effects (auditoría, notificaciones) del service que ejecuta la transferencia
+- **Decorator**: un decorador manual (`AuditableAccountService`) y su equivalente automático con Spring AOP (`@Transactional`, `@Cacheable`, `@Async`)
+- Un bug real que quedó sin corregir en el decorador manual — documentado en la Clase 12, para que el equipo lo detecte y lo resuelva
 
-## Clase 2: Strategy en Spring: Inyección de colecciones
+El proyecto vive en [`/proyecto`](../proyecto) y evoluciona clase a clase sobre la base que quedó al cierre de la [Sección 3](../seccion_3). Cada carpeta (`clase_01` … `clase_13`) contiene el slide (`.html`) y/o las capturas de pantalla de ese momento del curso. Las clases 5, 6, 8, 10 y 12 son puramente de código (no tienen carpeta propia porque no hay slide ni captura asociada) — su contenido se explica igual en este README con el diff real.
 
-Bienvenidos a una nueva clase bienvenidos al primero de los patrones al strategy definir una familia de algoritmos en capsular cada 1 a partir de una interfaz y hacerlos intercambiar esto es lo que nosotros hicimos allá por la sección número dos cuando aplicamos el principio solid open cloud cuando oímos overloss reemplazamos un switch de comisiones por una interfaz con múltiples implementaciones eso es formalmente el patrón strategy y tiene el siguiente diagrama UML este diagrama o ml este patrón tiene 3 participantes como indican los colores ese color amarillo beige ese color verde y el color rosado estos 3 participantes son el context el primero de todos que es quien necesita ejecutar el algoritmo en nuestro caso el servicio de transferencia la strategy es la interfaz que define el contrato es decir el método support y calculated nuestro fe calculator y los concrete strategies son las implementaciones concretas de esos métodos de contrato una por cada tipo de cuenta el condex lo interesante de todo esto es que no sabe cuál se va a ejecutar solo sabe que recibe una lista de estrategias y le pregunta a cada 1 vos manejas este caso vos manejas este caso en función de quién maneje el caso se realizan en este caso los cálculos correspondientes en este caso cálculos de comisiones cuánto vale la pena usar strategy cuando tenemos un comportamiento que cambia según algún criterio el criterio puede ser tipo de cuenta tipo de transacción región y que cuando agreguemos ese comportamiento queremos agregar una variante nueva creando una clase nueva anotándola con el @component como lo que hicimos y listo sin tocar lo que ya funciona respetando el principio solid de abierto cerrado y eso es exactamente lo que hicimos en la sección dos en Atlas Banc vayamos a ver esto en el código bien acá ya estamos en el código: FeeCalculator.java (Interfaz)
-Hace Spring para inyectar esta colección bien sprint lo que hace es escanear el contexto buscando todos los componentes todos los Bing que implementen la interfaz que nosotros le pedimos en league fit calculator fif calculators técnicamente sprint busca todos los componentes @component que implementen phy calculator y los inyecta en la lista que nosotros declaramos no importa si hay 2310 los crea si mañana nosotros agregamos una implementación nueva con un por supuesto con una @component por eso señalé ya como 10 veces en esta clase eso string la va a incluir automáticamente no tocamos ni una sola línea de servicio que él la consume Ahora bien una vez que se inyectan todas estas posibilidades tenemos la posibilidad de recorrer esa lista de filtrarla de encontrar y de calcular en función de qué tipo de cuenta y esa cada donde aparece el concepto de auto selección el servicio no tiene switch no sabe cuántas estrategias existen cada estrategia se ofrece sola cuando le corresponde es decir esto es una auto selección y cuando necesitamos una variante nueva no tenemos que tocar nada es importante tener en cuenta que tiene que ser un componente bien también podemos controlar el orden y la prioridad sprint nos da diferentes tipos de herramientas que vamos a ver en la clase siguiente que ya vimos vimos ping primery y vimos qualified vamos a ver order pero como el video se extendió demasiado en la clase que viene vamos a realizar una tarea y vamos a conocer alguna más de estas posibilidades para controlar el orden y la prioridad con esto llegamos al final y seguimos trabajando y creciendo en la siguiente clase
+## Pasos para completar la sección
 
-## Clase 3: Strategy en el proyecto: Hands-on
-Equipo bienvenidos a una nueva clase en esta clase vamos a resolver un probable problema por qué digo un probable problema porque qué pasa si spin mete el default F calculator primero en esta lista que nosotros tenemos acá puede pasar sí tenemos 3 componentes de implementación con lo cual tenemos una probabilidad de inyección es decir cuando sprint inyecta en esta lista F calculators el orden de los beams no está garantizado porque de qué depende esto depende del orden en que el classpad scanning lo detecta y este orden puede variar entre ejecuciones o entre entornos si por azard o probabilidad que no es poca default fe calculator queda primero su método support siempre devuelve true y por lo tanto el resto podríamos decir de los ficalculator nunca van a ser evaluados es decir si en esa lista cuando viene iteral siempre se encuentra con un true acá al final va a devolver cero siempre para todos los casos y eso puede ocurrir hay una probabilidad de que ocurra entonces cómo resolvemos ese problema lo resolvemos con @orden y eso es lo que vamos a hacer entre otras cosas en esta clase 
+1. Asegurate de haber terminado la **Sección 3**: `atlas-bank` debe validar JWT de Keycloak como Resource Server y proteger cada endpoint por rol.
+2. Seguí las clases **en orden** (0 → 13): cada una depende del código que dejó la anterior — Template Method depende de que Strategy ya esté resuelto, Factory Method depende de Template Method, Observer se engancha sobre el `execute()` que arma Template Method, y el Decorator envuelve un `AccountService` que no cambia en toda la sección.
+3. Podés abrir el proyecto en `/proyecto` y hacer `checkout` del commit correspondiente a cada clase si querés ver el estado exacto (ver la tabla de abajo).
+4. Prestá atención a los **paquetes**: en la Clase 7, `TransferService`, `TransferContext`, `TransactionProcessor` e `ITransferService` se mueven de `transaction.service` a `transaction.service.transfer`. Si venís de un `target/` compilado antes de ese commit, corré `mvn clean` — si no, quedan `.class` viejos del paquete anterior y Spring falla al arrancar con `ConflictingBeanDefinitionException` (dos beans con el mismo nombre, uno de cada paquete).
+5. Al final de la sección, `atlas-bank` debe tener:
+   - Cero `switch`/`if-else` por tipo de cuenta para calcular comisiones — todo resuelto por `List<FeeCalculator>` con auto-selección.
+   - Un único flujo de transacción (`TransactionProcessor<C>`) reutilizable para transferencias y, a futuro, depósitos/retiros.
+   - La construcción de `Transaction` centralizada en `TransactionFactory`, no repartida en cada service.
+   - Los side effects de una transferencia (auditoría, notificación) desacoplados del `TransferService` vía eventos.
+   - Un ejemplo de decorador manual (`AuditableAccountService`) y uno automático (`@Transactional` sobre `AccountService`) conviviendo en el mismo proyecto.
+6. Como práctica: probá `POST /api/v1/transactions/transfer` con cuentas de distinto `type` (`SAVINGS`, `CHECKING`, `PREMIUM`, y uno inventado) y confirmá que cada una calcula la comisión que le corresponde — y solo cae en `DefaultFeeCalculator` (comisión 0) cuando el tipo no tiene una estrategia propia. Después probá `POST /api/v1/accounts` y fijate qué devuelve el body — es la Clase 12.
 
-## Clase 4: Template Method: parte 1
-Hola equipo bienvenidos a una nueva clase seguimos con el segundo patrón template método la idea es simple pero muy poderosa cuando tenemos un flujo con pasos fijos sin prevalidamos siempre calculamos la comisión siempre ejecutamos y siempre guardamos pero alguno de esos pasos varía según el tipo de operación template method te permite definir el esqueleto del algoritmo en una clase base y dejar que las clases que heredan de esa clase base personalicen los pasos que cambien vinimos el servicio de transferencia si leemos el método exhibit es el que creamos el método que tiene un montón de pasos hay 5 bloques buscar cuentas validar calcular comisión actualizar saldos y crear y guardar la transacción pero si nosotros los traemos la búsqueda de cuentas es preparación de datos lo que realmente valía entre una transferencia y un depósito y un retiro son cuatro pasos y no más esos pasos son que se validan cómo se calcula la comisión cómo se ejecutan los cambios y cómo se guardan si copiamos ese flujo en cada service tenemos un código que va a estar duplicado acá es donde templain método nos ayuda a centralizar qué plantea este diagrama bueno la clase abstracta transaction proceso fíjense que es un genérico define un método que vamos a denominar process que recibe un contexto con los datos de la operación y ejecuta los pasos en orden validate calculate fe execute inside cada paso es abstracto y recibe ese mismo contexto las subclases definen su propio tipo de contexto con los datos que necesitan así el templo no tiene estado no guardan nada en campos de instancia es decir no tiene adultos todo viaja como parámetro acá estamos en el código para comenzar a comprender todo esto mejor: TransferService.java
+| Clase | Tema | Commit de referencia |
+|---|---|---|
+| 1 | ¿Por qué patrones de diseño? | `14c9016` |
+| 2 | Strategy en Spring: Inyección de colecciones | `33bb2cb` |
+| 3 | Strategy en el proyecto: Hands-on | `5828f7d`, `10dc563` |
+| 4 | Template Method: parte 1 | `4f39728` |
+| 5 | Template Method: parte 2 | `3c02409` |
+| 6 | Template Method: parte 3 | `86f1f1e` |
+| 7 | Factory Method: Creación desacoplada | `1e1af83` |
+| 8 | Factory Method: ventaja y limitación | `bb72a61` |
+| 9 | Observer: Eventos de aplicación | `fc3cb71` |
+| 10 | Observer en Spring: `ApplicationEventPublisher` | `4ea3878` |
+| 11 | Decorador: Enriquecer sin modificar 1 | `1f4089b` |
+| 12 | Decorador: Enriquecer sin modificar 2 | `53c16ad` |
+| 13 | Spring AOP: el decorador que ya estás usando | `fabdb86` |
 
-## Clase 5: Template Method: parte 2
+---
 
-## Clase 6: Template Method: parte 3
+## Clase 0 — Introducción
 
-## Clase 7: Factory Method: Creación desacoplada
-Bienvenido a tercer patrón de la sección factory method cuál es mi idea acá la idea es desacoplar la creación de objetos del lugar que los usan es decir si nosotros recordamos nuestro transcurso service vemos que en el servicio hacemos un new de una transacción bien la idea es desacoplar esa creación de lugar que los usa es decir el servicio pero ojo no se trata solo de ahorrarse líneas de código se trata de centralizar las decisiones de construcción esas decisiones no deberían estar dispersas en cada servicio cuando digo en cada servicio lo digo por lo siguiente lo digo porque hoy tenemos un transfer service pero mañana podríamos tener un deposit service o cualquier otro servicio entonces tendríamos en los diferentes servicios creación de transacciones ahora de quién es la responsabilidad del servicio o eso lo podemos aplicar a otra parte de nuestro código bueno es ahí donde interviene este patrón el factory method si recordamos nuestro dan para series al final teníamos el método serie este bloque crea una transacción qué hay en esa transacción bueno hay string mágico como por ejemplo transfer execute decisiones de qué campos van según el tipo y la secuencia de zetas si mañana agregamos un depósit proceso vamos a tener que repetir la misma mecánica pero con deposit sin el source account IDY con un feed en Zero el problema no es la cantidad de límites me refiero a lo siguiente si nosotros tuviéramos que no tenemos hoy un deposit service es decir un servicio que se encargue de la transacción de tipo de post nosotros al final de ese deposit service tendríamos un método save que retorna una transacción contemplain esa transacción va a ser el tipo de depósito ahora nosotros ya tenemos actualmente un transfer service que tiene el método set y que retorna una transacción de tipo transport entonces fíjense que la lógica de creación de los diferentes tipos de transacciones están separadas y nosotros lo que queremos hacer como tenemos a la derecha es centralizar y eso es lo que vamos a hacer gracias a factory método acá les presento a factory fíjense que tenemos un transaction factory y diferentes productos que van a concluir esa fábrica nosotros qué vamos a hacer vamos a crear un transaction factory que recibe el contexto de la operación por el mismo contexto que tenemos transfer contest si recuerdan el objeto del plan para realizar transferencias iremos a pasar el feed también internamente la factory va a decir qué tipo poner que estas tus aplicar qué campo de contexto y si la transaction cambia en algún momento internamente un campo nuevo en un default un estatus que pasa a ser un enum o lo que sea se modifica las factores los nunca se entera bien acá lo que voy a hacer ya estamos en el código 
+Bienvenidos a una nueva sección: patrones que organizan la lógica. Es 100% verdad, y no tanto — porque **Observer** no solo organiza lógica, también conecta piezas, pero tenía que ir en algún lado y decidimos incluirlo acá.
 
-## Clase 8: Factory Method: ventaja y limitación
-El factory abosorve cambios internos, defaults, mapeo que no dependen del colep, no absorve datos nuevos que vienen del usuario, esos lamentablemente traviesan toda la cadena y es inevitable hacer todas esas modificaciones, saber la diferncia a nosotros nos va a permitir decidir cuando una factory se justifica y cuando es un open Engiener es una sobre ingeneieria 
+**Strategy** va a ser el punto de partida. Ya lo vimos en la Sección 2 cuando trabajamos el principio Open/Closed: ahí resolvimos una problemática y vimos, sin llamarlo así, cómo se implementa una strategy. Ahora lo vamos a ver desde un punto de vista más técnico, formal, y con una tarea propia.
 
-## Clase 9: Observer: Eventos de aplicación
+**Template Method**: una clase abstracta con un método público que ejecuta métodos abstractos en un orden inalterable — las clases que extienden esa base implementan esos métodos abstractos como lo necesiten.
 
-Hola equipo bienvenidos a una nueva clase bienvenidos al cuarto patrón de la sesión el patrón nos pausa la idea es la cuando algo sucede otros se enteran y reaccionan sin que el que produjo el evento conozca a aquellos que reaccionan es decir el emisor publica un evento los interesados se suscriben cuando el evento ocurre todos los suscriptores reaccionan el emisor no sabe cuántos suscriptores hay ni qué hacen pasamos a un ejemplo pensemos en nuestro transfer service voy a hacer una cosa ejecute la transferencia pero en un Banco real cuando se ejecuta una transferencia pasan muchas cosas más hay que enviar un comprobante hay que registrar un blog de auditoría hay que ejecutar una verificación de fraude donde ponemos todo eso si lo incluimos en el transfer service el método execute va a encear crecer y crecer sin control va a tener una inyección de una notification service supongamos otra de Audi service otra de fraude detection service y así sucesivamente cada vez que agreguemos un efecto secundario a una transferencia vamos a tener que abrir nuestro transfer service al agregar una dependencia agregar una llamada el service de transferencia va a terminar conociendo medio oxytem si nosotros analizamos el esquema que tenemos actualmente en pantalla sin observer el transfer services tiene que conocer y llamar a cada servicio de forma directa fíjense que cada flecha es una dependencia cada dependencia es un motivo para abrir el archivo y modificarlo si mañana agregamos un servicio de puntos de fidelidad hay que tocar el transfer service nuevamente y si quieren podemos ir un poco más lejos todavía qué pasa si falla el notification service es decir el envío del correo electrónico la notificación del cliente de la transferencia la pregunta acá es debería fallar la transferencia completa simplemente con un email la realidad es que no son problemas de 2 categorías distintas bueno entonces ustedes se imaginarán cuál es la solución bien la solución es pública y reaccionar la solución es observar con observer el transversal service hace una sola cosa extra publica un evento se ejecuta una transferencia.no sabe quién está escuchando no sabe si hay un link de notification línea de fraude los 3 o guimas se suscribe al evento y reacciona por su cuenta y lo mejor de todo agregar un listener nuevo no requiere tocar el transfer service y acá viene algo importante esto no es una idea abstracta tiene esto implementado de forma nativa con application event publish y también utilizando la anotación @evenyssen es el mecanismo que vamos a usar en la próxima clase el framework ya hizo el trabajo pesado por nosotros para ponernos un poquitito más técnicos podemos decir que el observer tiene 3 participantes el evento es el objeto que describe lo que pasó el publisher que él quien emite ese evento y no le dicen a qué son lo que reaccionan a ese evento cada 1 es independiente cada 1 tiene su propia responsabilidad hay que decir también que los listener pueden vivir en paquetes completamente distintos para cerrar esta clase hay que decir que observen resuelve un problema completo desacoplar los efectos secundarios del evento que los dispara es decir transfer services no debería conocer al servicio de notificaciones ni al de auditorino solo debería decir en el siguiente evento se ejecuta una transferencia y deja que los interesados en esa transferencia reaccionen en la próxima clase lo vamos a implementar así que con esto llegamos al final seguimos trabajando en la siguiente clase
+**Factory Method**: un patrón creacional que desacopla la creación de objetos de los services que los usan — separa la lógica de construcción ("hacer un `new` de algo") de la lógica de negocio del service, delegándola a una fábrica.
 
-## Clase 10: Observer en Spring: ApplicationEventePublisher
+**Observer**: acá lo vamos a trabajar desde un punto de vista metodológico. Un evento se publica desde un service, y hay suscriptores interesados en saber cuándo se publica ese evento para disparar sus propios procesos — efectos secundarios que quedan separados del evento que los dispara, así el emisor no se carga de lógica difícil de mantener.
 
+**Decorator**: agrega comportamiento a una clase sin tocarla. Ya lo usamos muchas veces vía anotaciones (`@Transactional`, por ejemplo), pero acá lo vamos a construir a mano, línea por línea, para entender la estrategia de "envolver" una clase antes de ver cómo Spring lo automatiza.
 
-## Clase 11: Decorador: Enriquecer sin modificar 1
-Hola equipo último patrón de la sección el patrón decorador lo hemos utilizado un montón de veces cuando utilizamos el @algo estamos utilizando no vamos a tocar la clase legal no la vamos a extender con agrega lo que necesita delega al original por fuera civil dónde aplica este patrón en Atlas on supongamos que necesitamos registrar un log de auditoría cada vez que se crea una cuenta es decir creamos una cuenta y necesitamos registrar un lock de auditorio podríamos vender el lock directo en nuestro account service que es donde se crea la cuenta pero son mezclas dos responsabilidades la lógica de negocio asociada a la call service como a cualquier otro servicio y la auditoría con el decorador vamos a poder crear un Audi table account service que envuelve a la clase original al account service recibe la llamada logre y delega el servicio real la responsabilidad que tiene el servicio real que es crear esa cuenta account service sigue limpio no se agrega ningún código ahí dentro no se agrega a ningún Love que Controller no y Controller sigue interactuando con el account service es importante mencionar Spring a open aspects orientative programmer o programación orientada a aspectos es el mecanismo que tiene sprint subrayo pin interceptar la ejecución de métodos y agregar comportamiento antes después o alrededor de estos métodos sin modificar el código original lo hace generando proxys en runtime en tiempo de ejecución que envuelven nuestros links cuando utilizamos transaction cachete o accidente a o p está creando un decorador automático por pensemos en algunos ejemplos cuando utilizamos @transactional estamos utilizando un decomor ustedes saben que cuando nosotros arrobamos con transactional un método vamos a tener la posibilidad de manejar commit y de manejar rollback en ese método del servicio y eso lo estamos haciendo simplemente con una anotación no estamos en ningún momento modificando el código del método simplemente estamos agregando comportamiento lo mismo pasa con @cacheable ingenieron proxy que antes de ejecutar el método revisa si el resultado está en cachet si lo encuentra lo devuelve directo sin ejecutar mal pero si no ejecutan caché el resultado y lo devuelven otro decorador ese mismo concepto Spring envuelve el brind en un proxy que ejecuta el método en otro hilo el cual lo conté sigue el árbol 3 anotaciones 3 proxys 3 decoratorios el patrón es el mismo sprint lo generas por nosotros miremos nuestro account service
+Un llamado de atención importante para toda la sección: aplicar un patrón es seguir una fórmula para resolver un problema — no es la única fórmula, y no todo problema necesita uno. Conocerlos sirve para poder discutir en equipo si, en una problemática puntual, aplicar tal patrón tiene sentido o no. Esa discusión tiene que estar presente al diseñar. Esto no significa que a partir de ahora todo tiene que ser un patrón — las aplicaciones evolucionaron, y muchas veces una librería o una dependencia ya resuelve lo que antes resolvíamos a mano con un patrón.
 
+**Temas puntuales de la sección:**
+- **Strategy**: reemplazar el `switch` de comisiones por una interfaz con múltiples implementaciones
+- **Inyección de colecciones en Spring**: seleccionar la estrategia correcta en runtime
+- **Template Method**: formalizar el flujo validar → calcular → ejecutar → guardar
+- **Factory Method**: centralizar decisiones de construcción en `TransactionFactory`
+- **Observer con `ApplicationEventPublisher`**: desacoplar side effects sin que el service los conozca
+- **Decorator**: enriquecer comportamiento sin modificar el service original
 
-## Clase 12: Decorador: Enriquecer sin modificar 2
+---
 
-## Clase 13: Spring AOP: el decorador que ya estas usando
-Al equipo bienvenidos al final de la sesión ese es el propósito de esta clase en la clase anterior construimos un decorador manual la auditoria con service que envuelve en la conserva lo que vivimos nosotros línea por línea Sting tiene un mecanismo para hacer lo mismo pero de forma automática y se llamaba Opel aspect oriente Program Ahora bien qué hace a open cuando string levanta la aplicación y encuentra ciertas anotaciones genera una copia intermedia del Bing un doble ese doble se pone en el medio recibe la llamada hace algo extra es decir agrega algún tipo de comportamiento abrir una transacción verificar un cachete lo que sea y después le pasa la llamada al Bing real a ese doble se lo llama proxy el Controller cree que habla con account service pero string le puso un doble adelante es exactamente lo que hicimos nosotros con Audi table account cerding eso lo construye solo ahora hagamos una distinción importante no toda anotación que ponemos en una clase es aup hay dos categorías a la izquierda las que envuelven la ejecución del método transactional cachable accidente estas generan un proxy que intercepta la llamada son decorators automáticos son auge a la derecha las que configuran el link @componen service prime etc estas les dicen Spring cómo registrar el bim cómo inyectarlo en qué orden ponerlo pero no interceptan nada no generan proxys no son a v hay que decir que en Spring a o p es siempre contra métodos sprint genera proxys a nivel de bim y los proxys solo pueden interceptar llamadas a métodos no interceptan acceso a campos ni creación de objetos la forma práctica de reconocerlos es la anotación va sobre un método o sobre la clase aplicando a todos sus métodos y cuando esa anotación agrega comportamiento que se ejecuta sin que esté inscrito en el código del método esa si la anotación le dice screen cómo registrar inyectar u ordenar Bing no lo es cuándo utilizar el manual y cuándo utilizar el automático el decorito manual es visible en el código fácil de devolver y te da control total pero qué sucede tiene movilnet play ya lo vimos si la interfaz crece tenemos ahí un código que no estamos aprovechando por decirlo de alguna manera que nos está ocupando espacio en decorator a o p es una anotación Zero builder play aplica muchos beans a la vez pero es invisible más difícil de seguir cuando de weas ahora también hay que decir que no compiten entre sí se pueden complementar vamos a ver ahora sí a nuestro arroba transactional que ya lo hemos utilizado
+## Clase 1 — ¿Por qué patrones de diseño?
+
+Slide: [`clase_01/02- ¿Por qué patrones de diseño?.html`](<clase_01/02- ¿Por qué patrones de diseño?.html>)
+
+> "Un patrón sin un dolor es *overengineering*."
+
+Hasta ahora construimos un monolito con capas claras, DTOs, validaciones, manejo de errores y seguridad con Keycloak. Ahora toca algo distinto: mirar el código que ya tenemos y encontrar los dolores — y para cada dolor, un patrón que lo resuelve. Esta es la regla de toda la sección: **no se implementa un patrón porque es elegante o porque está en un libro. Se implementa porque hay un problema concreto que lo necesita.**
+
+**¿Qué son los patrones de diseño?** Soluciones probadas a problemas recurrentes. No son código para copiar y pegar — son ideas que se adaptan al contexto de cada proyecto. Se formalizaron en 1994 (Gang of Four), y Spring Boot ya los usa internamente por todos lados: `@Autowired` es inyección de dependencias, `@Transactional` es un proxy (Decorator), `ApplicationEventPublisher` es un Observer. En esta sección hacemos explícito lo que Spring hace implícito.
+
+**5 patrones, 5 dolores:**
+
+| Patrón | Dolor en atlas-bank |
+|---|---|
+| Strategy | `switch` de comisiones que crece con cada tipo de cuenta |
+| Template Method | Flujo de transacción repetido con variaciones |
+| Factory Method | Creación de transacciones acoplada al tipo |
+| Observer | Side effects (notificaciones, auditoría) acoplados al service |
+| Decorator | Agregar comportamiento (auditoría) sin modificar el service |
+
+**Lo que ya tenemos:** `FeeCalculator` con `supports()` y `calculate()`, y sus implementaciones (`SavingFeeCalculator`, `CheckingFeeCalculator`, `DefaultFeeCalculator`) — creadas en la Sección 2 al aplicar Open/Closed, inyectadas por Spring como `List<FeeCalculator>`. Es un **proto-Strategy** que ya existe en el código: en esta sección lo formalizamos, le ponemos nombre, y lo completamos.
+
+---
+
+## Clase 2 — Strategy en Spring: Inyección de colecciones
+
+Slides: [`clase_02/03- Strategy en Spring- Inyección de colecciones 1.html`](<clase_02/03- Strategy en Spring- Inyección de colecciones 1.html>) (el concepto) y [`clase_02/03- Strategy en Spring- Inyección de colecciones 2.html`](<clase_02/03- Strategy en Spring- Inyección de colecciones 2.html>) (la inyección). Commit: `33bb2cb` (sin cambios de código — la implementación llega en la Clase 3).
+
+> "Ya lo implementaron en Open/Closed. Ahora le ponemos nombre."
+
+**Strategy**: definir una familia de algoritmos, encapsular cada uno, y hacerlos intercambiables. Tiene tres participantes:
+
+| Rol | En atlas-bank |
+|---|---|
+| **Context** | `TransferService`, con `List<FeeCalculator> feeCalculators` |
+| **Strategy** (interfaz) | `FeeCalculator` — `supports(accountType)`, `calculate(amount)` |
+| **Concrete Strategies** | `SavingFeeCalculator` (1.0%), `CheckingFeeCalculator` (1.5%), `DefaultFeeCalculator` (0%, fallback) |
+
+**¿Cuándo usar Strategy?** Cuando hay un comportamiento que varía según el contexto (tipo de cuenta, tipo de transacción, región...) y querés agregar variantes nuevas sin modificar código existente, eliminando `switch`/cadenas de `if-else`. Si agregar una variante nueva significa crear una clase nueva y nada más, es Strategy.
+
+**Inyección de colecciones:** Spring escanea el contexto, encuentra todos los `@Component` que implementan `FeeCalculator`, y los inyecta automáticamente en `List<FeeCalculator> feeCalculators`. Si mañana se agrega una implementación nueva anotada con `@Component`, Spring la incluye sola — no se toca ni una línea del service que la consume.
+
+```java
+BigDecimal fee = feeCalculators.stream()
+        .filter(fc -> fc.supports(from.getType()))  // ¿vos manejás este tipo?
+        .findFirst()                                 // tomá la primera que diga sí
+        .orElseThrow(...)                             // si ninguna → error
+        .calculate(amount);                           // ejecutá el algoritmo
+```
+
+El service no tiene `switch`. No sabe cuántas estrategias existen. Cada estrategia se ofrece sola cuando le corresponde — a esto se lo llama **auto-selección**.
+
+**Controlando la inyección:**
+
+| Anotación | Para qué sirve | ¿Aplica acá? |
+|---|---|---|
+| `@Order` | Define la posición en la lista — menor número, mayor prioridad | Sí: garantizar que el fallback quede al final |
+| `@Primary` | Marca un bean como opción por defecto cuando se inyecta **uno solo** | No — acá se inyecta una lista, no un bean único |
+| `@Qualifier` | Elegís un bean específico por nombre, en tiempo de compilación | No — es lo opuesto a Strategy, que selecciona en runtime |
+
+---
+
+## Clase 3 — Strategy en el proyecto: Hands-on
+
+![captura de clase](<clase_03/Captura de pantalla 2026-08-14 a la(s) 5.27.24 a. m..png>)
+
+Commits: `5828f7d` (crea `PremiumFeeCalculator` vacío) y `10dc563` (lo implementa y agrega `@Order` a las cuatro estrategias).
+
+**El problema real:** Spring no garantiza el orden en que el classpath scanning descubre los `@Component` — depende del orden de detección, y puede variar entre ejecuciones o entre entornos. `DefaultFeeCalculator.supports()` siempre devuelve `true` (es el fallback). Si por azar queda **primero** en la lista inyectada, el `.filter(fc -> fc.supports(...)).findFirst()` lo encuentra a él antes que a cualquier estrategia real, y **todas** las comisiones terminan calculándose en `0`, sin importar el tipo de cuenta — un bug intermitente, difícil de reproducir, que puede pasar tests hoy y fallar en producción mañana.
+
+**La solución: `@Order`.**
+
+```java
+@Component
+@Order(1)
+public class SavingFeeCalculator implements FeeCalculator { /* ... */ }
+
+@Component
+@Order(1)
+public class CheckingFeeCalculator implements FeeCalculator { /* ... */ }
+
+@Component
+@Order(1)
+public class PremiumFeeCalculator implements FeeCalculator {
+    @Override
+    public boolean supports(String accountType) {
+        return "PREMIUM".equals(accountType);
+    }
+
+    @Override
+    public BigDecimal calculate(BigDecimal amount) {
+        return BigDecimal.ZERO; // cuentas premium, sin comisión — por diseño
+    }
+}
+
+@Component
+@Order() // sin valor = Ordered.LOWEST_PRECEDENCE → siempre al final
+public class DefaultFeeCalculator implements FeeCalculator {
+    @Override
+    public boolean supports(String accountType) {
+        return true; // fallback
+    }
+    // ...
+}
+```
+
+Las tres estrategias reales comparten `@Order(1)` — el orden relativo *entre ellas* no importa, porque sus `supports()` son mutuamente excluyentes (cada una responde a un `accountType` distinto). Lo que sí importa es que `DefaultFeeCalculator`, con `@Order()` (que por defecto vale `Ordered.LOWEST_PRECEDENCE`, la prioridad más baja posible), quede **siempre** último en la lista — así el fallback solo se ejecuta cuando ninguna estrategia real dijo que sí.
+
+La captura muestra una transferencia real (`POST /api/v1/transactions/transfer`) ya con el fix aplicado, devolviendo la comisión correcta (`fee: 0`) para el tipo de cuenta involucrado — confirmando que la estrategia correcta responde, no el fallback por casualidad de orden.
+
+---
+
+## Clase 4 — Template Method: parte 1
+
+Slide: [`clase_04/05- Template Method- parte 1.html`](<clase_04/05- Template Method- parte 1.html>). Commit: `4f39728` (solo el slide — la implementación arranca en la Clase 5).
+
+**Template Method**: definir el esqueleto de un algoritmo en una clase base, dejando que las subclases completen los pasos que varían.
+
+**El flujo en `TransferService`:** primero una preparación (buscar las cuentas — no varía entre tipos de transacción), y después cuatro pasos fijos que reciben un **contexto** con los datos de la operación (sin estado guardado en el service): `validate(ctx)` → `calculateFee(ctx)` → `execute(ctx, fee)` → `save(ctx, fee)`. Transferencia, depósito y retiro comparten el mismo flujo con reglas distintas en cada paso — si ese flujo se copia en cada service, el código queda duplicado. Template Method lo centraliza.
+
+**Clase abstracta + subclases:**
+
+```
+Abstract TransactionProcessor<C>
+  + process(C ctx)          ← template method
+  # validate(C ctx)
+  # calculateFee(C ctx)
+  # execute(C ctx, fee)
+  # save(C ctx, fee)
+        △
+        │ extends
+Concrete TransferService              Futuro DepositProcessor
+  C = TransferContext(from, to, amount)   C = DepositContext(to, amount)
+  + execute() → busca cuentas,            + execute() → busca cuenta,
+    llama process(ctx)                      llama process(ctx)
+  # validate(ctx) → fondos, activas       # validate(ctx) → cuenta activa
+  # calculateFee(ctx) → Strategy          # calculateFee(ctx) → sin comisión
+  # execute(ctx, fee) → débito+crédito    # execute(ctx, fee) → solo crédito
+  # save(ctx, fee) → tipo TRANSFER        # save(ctx, fee) → tipo DEPOSIT
+```
+
+`TransferService` es la primera implementación concreta; `DepositProcessor` queda planteado como el ejemplo de "próxima variante" que este diseño deja lista para agregar sin duplicar el flujo.
+
+---
+
+## Clase 5 — Template Method: parte 2
+
+Commit: `3c02409`. Se crea la clase base abstracta y el contexto:
+
+```java
+@RequiredArgsConstructor
+public abstract class TransactionProcessor<C> {
+    protected final TransactionRepository transactionRepository;
+
+    @Transactional
+    public Transaction process(C context) {
+        validate(context);
+        BigDecimal fee = calculateFee(context);
+        execute(context, fee);
+        return save(context, fee);
+    }
+
+    protected abstract void validate(C context);
+    protected abstract BigDecimal calculateFee(C context);
+    protected abstract void execute(C context, BigDecimal fee);
+    protected abstract Transaction save(C context, BigDecimal fee);
+}
+```
+
+```java
+public record TransferContext(Account fromAccount, Account toAccount, BigDecimal amount) {}
+```
+
+Y `TransferService` pasa a extender `TransactionProcessor<TransferContext>`, pero en este commit los cuatro métodos quedan como **stubs vacíos** (`validate` no hace nada, `calculateFee`/`save` devuelven `null`, `execute` no hace nada) — el esqueleto ya compila y define la forma, pero la lógica real (que antes vivía toda junta dentro de `execute(fromId, toId, amount)`) todavía no se movió a los pasos del template. Es un paso intermedio a propósito, para separar "definir el esqueleto" de "migrar la lógica" — se completa en la Clase 6.
+
+---
+
+## Clase 6 — Template Method: parte 3
+
+Commit: `86f1f1e`. Se migra la lógica que antes vivía toda junta en `execute()` a cada paso abstracto:
+
+```java
+@Override
+protected void validate(TransferContext context) {
+    if (!"ACTIVE".equals(context.from().getStatus())) {
+        throw new AccountNotActiveException(context.from().getId(), context.from().getStatus());
+    }
+    if (!"ACTIVE".equals(context.to().getStatus())) {
+        throw new AccountNotActiveException(context.to().getId(), context.to().getStatus());
+    }
+    if (context.from().getBalance().compareTo(context.amount()) < 0) {
+        throw new InsufficientFoundsException(context.from().getId(), context.from().getBalance(), context.amount());
+    }
+}
+
+@Override
+protected BigDecimal calculateFee(TransferContext context) {
+    return feeCalculators.stream()
+            .filter(fc -> fc.supports(context.from().getType()))
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException("No hay calculador para el tipo: " + context.from().getType()))
+            .calculate(context.amount());
+}
+
+@Override
+protected void execute(TransferContext context, BigDecimal fee) {
+    context.from().setBalance(context.from().getBalance().subtract(context.amount()).subtract(fee));
+    context.to().setBalance(context.to().getBalance().add(context.amount()));
+    accountRepository.save(context.from());
+    accountRepository.save(context.to());
+}
+
+@Override
+protected Transaction save(TransferContext context, BigDecimal fee) {
+    Transaction transaction = new Transaction();
+    transaction.setType("TRANSFER");
+    transaction.setSourceAccountId(context.from().getId());
+    transaction.setTargetAccountId(context.to().getId());
+    transaction.setAmount(context.amount());
+    transaction.setFee(fee);
+    transaction.setStatus("EXECUTED");
+    return transactionRepository.save(transaction);
+}
+```
+
+Y `execute(fromId, toId, amount)` (el método público del controller) queda reducido a buscar las cuentas y delegar todo el resto al template method heredado:
+
+```java
+public Transaction execute(Long fromId, Long toId, BigDecimal amount) {
+    Account from = accountRepository.findById(fromId).orElseThrow(() -> new AccountNotFoundException(fromId));
+    Account to = accountRepository.findById(toId).orElseThrow(() -> new AccountNotFoundException(toId));
+    return process(new TransferContext(from, to, amount));
+}
+```
+
+De paso, `TransferContext` se renombra: `fromAccount`/`toAccount` pasan a `from`/`to`. Con esto, `TransferService` queda con exactamente la misma lógica de negocio que tenía antes de la Clase 4 — solo que ahora repartida en los cuatro pasos que `TransactionProcessor` va a poder reutilizar para otros tipos de transacción.
+
+---
+
+## Clase 7 — Factory Method: Creación desacoplada
+
+Slide: [`clase_07/08- Factory Method- Creación desacoplada.html`](<clase_07/08- Factory Method- Creación desacoplada.html>). Commit: `1e1af83`.
+
+**Factory Method**: centralizar las decisiones de construcción. No es "menos líneas de código" — es **menos acoplamiento**.
+
+**Antes — decisiones dispersas** dentro de `save()`: strings mágicos (`"TRANSFER"`, `"EXECUTED"`), qué campos van según el tipo. Si mañana se agrega `DepositProcessor`, repetiría la misma mecánica con `"DEPOSIT"`, sin `source`, con `fee = ZERO` — la misma decisión, duplicada en cada service.
+
+**Después — decisiones centralizadas:**
+
+```java
+public class TransactionFactory {
+    public static Transaction createTransfer(TransferContext context, BigDecimal fee) {
+        Transaction transaction = new Transaction();
+        transaction.setType("TRANSFER");
+        transaction.setSourceAccountId(context.from().getId());
+        transaction.setTargetAccountId(context.to().getId());
+        transaction.setAmount(context.amount());
+        transaction.setFee(fee);
+        transaction.setStatus("EXECUTED");
+        return transaction;
+    }
+}
+```
+
+```java
+@Override
+protected Transaction save(TransferContext context, BigDecimal fee) {
+    Transaction transaction = TransactionFactory.createTransfer(context, fee);
+    return transactionRepository.save(transaction);
+}
+```
+
+El service ya no sabe qué string va en `type`, ni cuál es el status por defecto, ni qué campos mapear — la factory decide todo eso. Si `Transaction` cambia internamente, los services no se enteran. Pensada a futuro, la fábrica queda lista para sumar `createDeposit(...)` y `createWithdrawal(...)` con sus propias reglas, sin que el service que las llama sepa nada de esos detalles.
+
+**Reorganización de paquetes:** este commit también mueve `ITransferService`, `TransactionProcessor`, `TransferContext` y `TransferService` de `transaction.service` a `transaction.service.transfer`, y agrega `transaction.service.factory.TransactionFactory`. Si tenés un `target/` compilado de antes de este commit, corré `mvn clean` antes de levantar la app — si no, quedan `.class` huérfanos del paquete viejo y Spring falla al arrancar con `ConflictingBeanDefinitionException` (dos beans `transferService`, uno por cada paquete).
+
+---
+
+## Clase 8 — Factory Method: ventaja y limitación
+
+Commit: `bb72a61`. Se agregan dos campos nuevos a `Transaction` — `createdBy` y `description` — y la factory empieza a completar `createdBy` sola:
+
+```java
+public static Transaction createTransfer(TransferContext context, BigDecimal fee) {
+    Transaction transaction = new Transaction();
+    transaction.setType("TRANSFER");
+    transaction.setCreatedBy("SYSTEM"); // nuevo: la factory lo decide, el service no
+    // ...
+}
+```
+
+**La ventaja:** la factory absorbe cambios internos, defaults y reglas de mapeo que no dependen de quién la llama — agregar `createdBy = "SYSTEM"` no tocó ni una línea de `TransferService`.
+
+**La limitación:** la factory **no** absorbe datos nuevos que vienen del usuario. Si mañana `description` tuviera que venir del request (por ejemplo, un motivo de transferencia que escribe el cliente), ese dato sí tiene que atravesar toda la cadena — DTO → Controller → Context → Factory — igual que antes. Es inevitable, la factory no lo evita. Saber esta diferencia es lo que permite decidir cuándo una factory se justifica y cuándo es *overengineering*: se justifica para centralizar decisiones internas repetidas; no resuelve la propagación de datos que legítimamente vienen de afuera.
+
+---
+
+## Clase 9 — Observer: Eventos de aplicación
+
+Slide: [`clase_09/10- Observer- Eventos de aplicación.html`](<clase_09/10- Observer- Eventos de aplicación.html>). Commit: `fc3cb71` (solo el slide — la implementación llega en la Clase 10).
+
+**Observer**: cuando algo sucede, los interesados se enteran y reaccionan, sin que el que produjo el evento los conozca.
+
+**Side effects acoplados (el problema):** en un banco real, ejecutar una transferencia dispara mucho más que mover saldos — hay que enviar un comprobante, registrar un log de auditoría, correr una verificación de fraude. Si todo eso se resuelve inyectando `NotificationService`, `AuditService`, `FraudDetectionService` directo en `TransferService`, cada efecto secundario nuevo es una dependencia más — y `TransferService.execute()` termina conociendo medio sistema. Si mañana se agrega un `LoyaltyService` para sumar puntos, hay que volver a abrir y modificar `TransferService`. Y además quedan mezcladas dos categorías de error muy distintas: si falla el envío del email, ¿tiene que fallar la transferencia completa?
+
+**Publicar y reaccionar (la solución):** `TransferService.execute()` hace una sola cosa extra — publica un evento (`TransactionExecutedEvent`, con `sourceId`, `targetId`, `amount`, `fee`). No sabe quién está escuchando. `NotificationListener`, `AuditListener`, `FraudDetectionListener` (o cualquier listener futuro) se suscriben al evento y reaccionan por su cuenta. Agregar un listener nuevo no requiere tocar `TransferService`.
+
+**Los tres participantes:**
+
+| Rol | En atlas-bank |
+|---|---|
+| **Event** | `TransactionExecuteEvent` — describe lo que pasó, lleva los datos que los listeners necesitan |
+| **Publisher** | `TransferService`, usando `ApplicationEventPublisher` de Spring |
+| **Listeners** | métodos anotados `@EventListener` — cada uno independiente, pueden vivir en paquetes distintos |
+
+---
+
+## Clase 10 — Observer en Spring: `ApplicationEventPublisher`
+
+Commit: `4ea3878`. Se crea el evento:
+
+```java
+public record TransactionExecuteEvent(
+        Long transactionId,
+        String type,
+        Long sourceAccountId,
+        Long targetAccountId,
+        BigDecimal amount,
+        BigDecimal fee
+) {}
+```
+
+Y dos listeners, cada uno reaccionando al mismo evento de forma completamente independiente:
+
+```java
+@Component
+@Slf4j
+public class AuditListener {
+    @EventListener
+    public void onTransactionExecuted(TransactionExecuteEvent event) {
+        log.info("Registrando la auditoria - {} de cuenta #{} a cuenta #{} por ${}",
+                event.type(), event.sourceAccountId(), event.targetAccountId(), event.amount());
+    }
+}
+
+@Component
+@Slf4j
+public class NotificationListener {
+    @EventListener
+    public void onTransactionExecuted(TransactionExecuteEvent event) {
+        log.info("Enviando comprobante de {} por ${} - Transaction #{}",
+                event.type(), event.amount(), event.transactionId());
+    }
+}
+```
+
+`TransferService` pasa a inyectar `ApplicationEventPublisher` y, después de que `process(...)` (el template method de la Clase 6) devuelve la transacción ya guardada, publica el evento:
+
+```java
+public TransferService(TransactionRepository transactionRepository,
+                       AccountRepository accountRepository,
+                       List<FeeCalculator> feeCalculators,
+                       ApplicationEventPublisher eventPublisher) {
+    super(transactionRepository);
+    this.accountRepository = accountRepository;
+    this.feeCalculators = feeCalculators;
+    this.eventPublisher = eventPublisher;
+}
+
+@Override
+@Transactional
+public Transaction execute(Long fromId, Long toId, BigDecimal amount) {
+    Account from = accountRepository.findById(fromId).orElseThrow(() -> new AccountNotFoundException(fromId));
+    Account to = accountRepository.findById(toId).orElseThrow(() -> new AccountNotFoundException(toId));
+    Transaction transaction = process(new TransferContext(from, to, amount));
+    eventPublisher.publishEvent(new TransactionExecuteEvent(
+            transaction.getId(), transaction.getType(),
+            transaction.getSourceAccountId(), transaction.getTargetAccountId(),
+            transaction.getAmount(), transaction.getFee()
+    ));
+    return transaction;
+}
+```
+
+`TransferService` no importa `AuditListener` ni `NotificationListener` — ni siquiera sabe que existen. Agregar un tercer listener (por ejemplo, un `FraudDetectionListener`) es crear una clase nueva con `@Component` y `@EventListener`, sin tocar `TransferService`.
+
+---
+
+## Clase 11 — Decorador: Enriquecer sin modificar 1
+
+Slide: [`clase_11/12- Decorador- Enriquecer sin modificar 1.html`](<clase_11/12- Decorador- Enriquecer sin modificar 1.html>). Commit: `1f4089b` (solo el slide — la implementación llega en la Clase 12).
+
+**Decorator**: agregar comportamiento a un objeto sin modificar su código. Envolver, no heredar.
+
+**Decorator en atlas-bank:**
+
+```
+Controller (AccountController)
+    │ inyecta IAccountService
+    ▼
+Decorator (AuditableAccountService, @Primary)
+    log antes → delega → log después
+    │ delega
+    ▼
+Original (AccountService)
+    lógica de negocio pura
+```
+
+El controller no sabe que existe el decorador — sigue inyectando `IAccountService`. `AccountService` no sabe que está siendo decorado — sigue sin un solo log de auditoría adentro. El acoplamiento queda resuelto con `@Primary` en el decorador: cuando Spring tiene que resolver `IAccountService`, entrega el decorador, no el original.
+
+**Spring AOP: decoradores que ya usás**, sin haber escrito un decorador a mano:
+
+| Anotación | Qué hace | Cómo lo hace |
+|---|---|---|
+| `@Transactional` | Abre transacción antes del método, hace commit si sale bien, rollback si hay excepción | Proxy que envuelve el bean original |
+| `@Cacheable` | Verifica el caché antes de ejecutar; si hay resultado cacheado, lo devuelve, si no, ejecuta y cachea | Proxy que envuelve el bean original |
+| `@Async` | Ejecuta el método en otro thread; el caller no espera el resultado | Proxy que envuelve el bean original |
+
+---
+
+## Clase 12 — Decorador: Enriquecer sin modificar 2
+
+Commit: `53c16ad`. Se crea el decorador manual:
+
+```java
+@Slf4j
+@Component
+@Primary
+public class AuditableAccountService implements IAccountService {
+
+    private final IAccountService delegate;
+
+    public AuditableAccountService(@Qualifier("accountService") IAccountService delegate) {
+        this.delegate = delegate;
+    }
+
+    @Override
+    public Account create(Account account) {
+        log.info("Creando una cuenta - numero: {}, titular {}",
+                account.getAccountNumber(), account.getOwnerName());
+        Account created = delegate.create(account);
+        log.info("Cuenta creada exitosamente - ID: {}", created.getId());
+        return null;
+    }
+
+    @Override
+    public List<Account> findAll() {
+        return delegate.findAll();
+    }
+
+    @Override
+    public Account findById(Long id) {
+        return delegate.findById(id);
+    }
+}
+```
+
+`@Qualifier("accountService")` en el constructor apunta explícitamente al bean original (`AccountService`), para no inyectarse a sí mismo por accidente (`AuditableAccountService` también implementa `IAccountService`, y es `@Primary`). `findAll()` y `findById()` delegan de forma transparente, sin agregar nada — el ejemplo pedagógico se concentra en `create()`.
+
+> **Bug real, sin corregir en este commit:** `create()` llama a `delegate.create(account)`, loguea el `id` de la cuenta creada (`created.getId()`) — pero al final hace `return null;` en lugar de `return created;`. Como `AuditableAccountService` es `@Primary`, es el bean que `AccountController` termina usando. El resultado, hoy: `POST /api/v1/accounts` responde `201 Created`, pero con el **body vacío** (el mapper de MapStruct devuelve `null` de forma segura ante una entity `null`, así que no hay excepción — solo una respuesta sin datos). `AccountService` (el original) está perfecto; el bug vive exclusivamente en el decorador, y por eso es fácil no verlo si no se sabe que el decorador existe. Vale la pena corregirlo (`return created;`) antes de dar por cerrada la sección — es, además, un buen ejemplo de por qué un decorador que oculta el original puede esconder bugs que un test contra `AccountService` a secas no encontraría.
+
+---
+
+## Clase 13 — Spring AOP: el decorador que ya estás usando
+
+Slide: [`clase_13/14- Spring AOP- el decorador que ya estás usando.html`](<clase_13/14- Spring AOP- el decorador que ya estás usando.html>). Commit: `fabdb86`.
+
+**¿Qué es AOP?** *Aspect-Oriented Programming*: un mecanismo para interceptar la ejecución de métodos y agregar comportamiento antes, después o alrededor, sin tocar el código original. Cuando Spring encuentra ciertas anotaciones, genera un **proxy** en runtime que envuelve al bean real — ese proxy es un decorador automático.
+
+```
+Caller → Controller → Proxy (invisible, Spring AOP: abre tx → delega → commit/rollback) → Bean real (AccountService)
+```
+
+El caller cree que habla con el bean real. En realidad habla con el proxy.
+
+**No toda `@` es AOP:**
+
+| Envuelven la ejecución → **sí es AOP** | Configuran el bean → **no es AOP** |
+|---|---|
+| `@Transactional`, `@Cacheable`, `@Async`, `@Retryable` | `@Component`, `@Service`, `@Primary`, `@Qualifier`, `@Order` |
+| Generan un proxy que intercepta el método | No interceptan nada, solo le dicen a Spring cómo registrar/inyectar el bean |
+
+Ejemplo concreto en el código — `AccountService` gana `@Transactional` en sus tres métodos:
+
+```java
+@Override
+@Transactional
+public Account create(Account account) {
+    return accountRepository.save(account);
+}
+
+@Override
+@Transactional(readOnly = true)
+public List<Account> findAll() {
+    return accountRepository.findAll();
+}
+
+@Override
+@Transactional(readOnly = true)
+public Account findById(Long id) {
+    return accountRepository.findById(id).orElseThrow(() -> new AccountNotFoundException(id));
+}
+```
+
+Nada de esto modifica el cuerpo de los métodos — Spring AOP genera el proxy transaccional solo, en tiempo de ejecución, a partir de la anotación.
+
+**¿Cuándo usar cada uno?**
+
+| | Decorator manual (`AuditableAccountService`) | Decorator AOP (`@Transactional`, `@Cacheable`) |
+|---|---|---|
+| Ventaja | Lógica específica de negocio, visible en el código fuente, fácil de debuguear | Genérico, aplica a muchos beans, cero *boilerplate*, una sola anotación |
+| Desventaja | *Boilerplate* si la interfaz crece (hay que implementar todos los métodos, aunque solo uno cambie) | Invisible — más difícil de debuguear cuando algo falla |
+
+No compiten entre sí — se complementan. `AccountService` termina, al cierre de la sección, envuelto por **dos** decoradores a la vez: el manual (`AuditableAccountService`, explícito en el código) y el automático (el proxy de `@Transactional`, generado por Spring AOP).
+
+---
+
+Con esto se cierra la Sección 4: `atlas-bank` reemplazó el `switch` de comisiones por Strategy, formalizó el flujo de transacción con Template Method, centralizó la construcción de `Transaction` con Factory Method, desacopló los side effects de una transferencia con Observer, y tiene tanto un decorador manual como el equivalente automático de Spring AOP conviviendo sobre el mismo service.
